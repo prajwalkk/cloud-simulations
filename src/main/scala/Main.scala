@@ -1,4 +1,5 @@
 import com.typesafe.config.{Config, ConfigFactory}
+import evaluate_example_datacenters.ExampleDataCentersEval
 import org.slf4j.LoggerFactory
 
 object Main extends App {
@@ -8,5 +9,6 @@ object Main extends App {
   // Load Typesafe Configuration Library for input
   val config : Config = ConfigFactory.load("lightbend.conf")
 
-  logger.info("Hello, my name is " + config.getString("conf.name"))
+  // Evaluate two data centers that are both performing in their own simulations
+  ExampleDataCentersEval.start()
 }
