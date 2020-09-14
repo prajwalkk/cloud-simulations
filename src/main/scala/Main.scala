@@ -1,7 +1,7 @@
 import com.typesafe.config.{Config, ConfigFactory}
 import org.slf4j.LoggerFactory
 
-object Hello extends App {
+object Main extends App {
 
   // Logback SLF4J for logging debug, info, and warn statements
   val logger = LoggerFactory.getLogger("Hello")
