@@ -26,7 +26,7 @@ Run the appropriate main programs from 2 to 6. (1 was just an exampleSimulation)
 
 #### Details
 1. `ExampleSim` is a generic example project to just get a hang of Scala. It need not be tested.
-1. `Simulation[1 - 4]` are basic simulations. All simulate an IaaS system with different policies for VMAllocation (Time / SpaceShared). 1 and 2 have simple datacenter and 3 and 4 has Network datacenter. 
+1. `Simulation[1 - 4]` are basic simulations. All simulate an IaaS system with different policies for VMAllocation (Time / SpaceShared). 1 and 2 have simple datacenter and 3 and 4 have Network datacenter. 
 1. `Simulation5` simulates a scenario with 3 datacenters. Each as SaaS, PaaS, IaaS. 
 
 #### Basic Program Flow
