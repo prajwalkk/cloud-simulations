@@ -21,11 +21,12 @@ sbt clean compile test
 ```
 sbt clean compile run
 ```
-**Note**: There are 4 main classes in the project. These contain 4 different simulations. This will be shown when you run the `clean compile *` commands
+**Note**: There are 4 main classes in the project. These contain 4 different simulations. This will be shown when you run the `clean compile *` commands.
+Run the appropriate main programs from 2 to 6. (1 was just an exampleSimulation)
 
 #### Details
 1. `ExampleSim` is a generic example project to just get a hang of Scala. It need not be tested.
-1. `Simulation[1 - 4]` are basic simulations. All simulate an IaaS system with different policies for VMAllocation (Time / SpaceShared). 1 and 2 have simple datacenter and 3 has Network datacenter. 
+1. `Simulation[1 - 4]` are basic simulations. All simulate an IaaS system with different policies for VMAllocation (Time / SpaceShared). 1 and 2 have simple datacenter and 3 and 4 has Network datacenter. 
 1. `Simulation5` simulates a scenario with 3 datacenters. Each as SaaS, PaaS, IaaS. 
 
 #### Basic Program Flow
