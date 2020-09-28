@@ -26,11 +26,24 @@ import scala.util.Random
 */
 object ProviderUtils extends LazyLogging {
 
+  /**
+   * get random index of a host. This is to map randon host of a particular DC to a VM
+   *
+   * @param start 0
+   * @param end   number of hosts
+   * @return random number at an interval
+   */
   def getRandomIndex(start: Int, end: Int): Int = {
     val rnd = new Random
     start + rnd.nextInt((end - start) + 1)
   }
 
+  /**
+   * to create a [[DataCenterModel]] object from the config. This handles all the types Saas, Paas, Iaas
+   *
+   * @param conf
+   * @return
+   */
   def loadDatacenterFromConfig2(conf: Config) = {
     val providerModel = conf.getString("model-type") match {
       case "IaaS" => {
@@ -50,11 +63,22 @@ object ProviderUtils extends LazyLogging {
     providerModel
   }
 
-
+  /**
+   * Creates Cloudlets from config. returns a [[CloudletModel]]
+   *
+   * @param conf
+   * @return
+   */
   def loadCloudletsFromConfig(conf: Config): CloudletModel =
     ConfigBeanFactory.create(conf.getConfig("cloudlet-chars"), classOf[CloudletModel])
 
 
+  /**
+   * Creates a [[VMModel]] class from config
+   *
+   * @param conf
+   * @return
+   */
   def loadVmFromConfig(conf: Config): VMModel = {
     ConfigBeanFactory.create(conf.getConfig("vm-chars"), classOf[VMModel])
   }
@@ -74,6 +98,12 @@ object ProviderUtils extends LazyLogging {
     }.toList
   }
 
+  /**
+   * Creates a network from BriteFile to simulate delays
+   *
+   * @param simulation
+   * @param datacenterList
+   */
   def configureNetworkTopology(simulation: CloudSim, datacenterList: List[Datacenter]): Unit = {
     val networkTopology: NetworkTopology = BriteNetworkTopology.getInstance("topology.brite")
     simulation.setNetworkTopology(networkTopology)
@@ -82,12 +112,26 @@ object ProviderUtils extends LazyLogging {
     networkTopology.mapNode(datacenterList.tail.tail.head.getId, 2)
   }
 
+  /**
+   * Creates a [[Datacenter]] list to simulate paas
+   *
+   * @param simulation
+   * @param paasCenterList
+   * @return
+   */
   def createPaasDataCenter(simulation: CloudSim, paasCenterList: PaaSModel): List[Datacenter] = {
     logger.trace(s"Func: createPaas($simulation, $paasCenterList")
     val dataCenters: List[DataCenterModel] = paasCenterList.datacenters
     createDataCenters(simulation, dataCenters)
   }
 
+  /**
+   * Creates a [[Datacenter]] list to simulate Saas
+   *
+   * @param simulation
+   * @param SaaSCenterList
+   * @return
+   */
   def createSaasDataCenter(simulation: CloudSim, SaaSCenterList: SaaSModel): List[Datacenter] = {
     logger.trace(s"Func: createSaas($simulation, $SaaSCenterList")
     val dataCenters = SaaSCenterList.datacenters
@@ -136,6 +180,12 @@ object ProviderUtils extends LazyLogging {
 
   }
 
+  /**
+   * Sets a VM allocation Policy usingt the choices passed
+   *
+   * @param policy
+   * @return [[VmAllocationPolicy]] object
+   */
   def getVmAllocationPolicy(policy: String): VmAllocationPolicy = {
     policy match {
       case "FirstFit" => new VmAllocationPolicyFirstFit()
@@ -146,9 +196,10 @@ object ProviderUtils extends LazyLogging {
   }
 
   /**
+   * Creats a list of [[Host]] from the mdel class
    *
    * @param hostList
-   * @return
+   * @return [[Host]] List
    */
   def createHostList(hostList: List[HostModel]): List[Host] = {
     logger.trace(s"Func: createHostList(${hostList})")
@@ -190,6 +241,7 @@ object ProviderUtils extends LazyLogging {
   }
 
   /**
+   * Adds edgeSwitches, HostSwitches , Aggregate Switches to the existing topology
    *
    * @param sim
    * @param datacenter
@@ -210,6 +262,13 @@ object ProviderUtils extends LazyLogging {
 
   }
 
+  /**
+   * Creates a [[Datacenter]] list to simulate Iaas
+   * @param simulation
+   * @param iaasCenterList
+   * @param iaasServiceModel
+   * @return [[Datacenter]] List
+   */
   def createIaasDataCenter(simulation: CloudSim, iaasCenterList: IaaSModel, iaasServiceModel: IaasServiceModel): List[Datacenter] = {
     logger.trace(s"Func: createSaas($simulation, $iaasCenterList")
     val dataCenters: List[DataCenterModel] = iaasCenterList.datacenters

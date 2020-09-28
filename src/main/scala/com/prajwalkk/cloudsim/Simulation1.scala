@@ -3,6 +3,7 @@ package com.prajwalkk.cloudsim
 import com.prajwalkk.cloudsim.utils.ServiceUtilities.SimpleJob
 import com.prajwalkk.cloudsim.utils.ProviderUtilities.ProviderUtils._
 import com.prajwalkk.cloudsim.utils.ServiceModels.{IaasServiceModel, PaasServiceModel}
+import com.prajwalkk.custombuilder.CustomBuilder
 import com.typesafe.config.{Config, ConfigFactory}
 import com.typesafe.scalalogging.LazyLogging
 import org.cloudbus.cloudsim.brokers.DatacenterBrokerSimple
@@ -33,6 +34,6 @@ object Simulation1 extends LazyLogging {
     broker.submitCloudletList(simpleJob.createCloudletSimpleList.asJava)
     simulation.start()
     val finishedCloudlets = broker.getCloudletFinishedList
-    new CloudletsTableBuilder(finishedCloudlets).build()
+    new CustomBuilder(finishedCloudlets).build()
   }
 }

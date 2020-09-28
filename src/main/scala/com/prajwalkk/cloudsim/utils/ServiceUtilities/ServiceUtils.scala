@@ -16,13 +16,27 @@ import scala.util.Random
 * Date: 26-Sep-20
 *
 */
+/**
+ * Class that can be instanciated to create VMs, Cloudlets
+ *
+ * @param paasServiceModel Service config of paas
+ * @param iaasServiceModel Service config of iaas
+ * @param saasServiceModel Service config of saas
+ */
 case class ServiceUtils(val paasServiceModel: PaasServiceModel,
                         val iaasServiceModel: IaasServiceModel,
                         val saasServiceModel: SaasServiceModel) extends LazyLogging {
 
-  def uuid = java.util.UUID.randomUUID.toString
+  // def uuid = java.util.UUID.randomUUID.toString
 
-
+  /**
+   * Creates a list of VMs with specified config
+   *
+   * @param number  number of vms
+   * @param vmModel This is to differenciate Iaas, Paas, SaaS Vms
+   * @param model   same as above
+   * @return [[Vm]] List
+   */
   def createVMList(number: Int = 0, vmModel: VMModel = null, model: String = ""): List[Vm] =
     model match {
       // in case of Iaas, the VMs are chosen from the user config
@@ -34,6 +48,10 @@ case class ServiceUtils(val paasServiceModel: PaasServiceModel,
       case _ => throw new RuntimeException("No Model/number specified for Saas/Paas")
     }
 
+  /**
+   * Create a single Vm
+   * @return [[Vm]]
+   */
   def createVm(): Vm = {
     new VmSimple(iaasServiceModel.VM_MIPS, iaasServiceModel.VM_PES)
       .setRam(iaasServiceModel.VM_RAM)
@@ -41,6 +59,11 @@ case class ServiceUtils(val paasServiceModel: PaasServiceModel,
       .setSize(iaasServiceModel.VM_SIZE)
   }
 
+  /**
+   * Create Vm for Paas, Iaas
+   * @param vmModel
+   * @return
+   */
   def createVm(vmModel: VMModel): Vm = {
     new VmSimple(vmModel.vmMips, vmModel.getVmPes)
       .setRam(vmModel.vmRam)
@@ -48,6 +71,12 @@ case class ServiceUtils(val paasServiceModel: PaasServiceModel,
       .setSize(vmModel.vmSize)
   }
 
+  /**
+   * Cloudlets creation function for different models
+   * @param cloudletModel
+   * @param model String for Iaas, Paas, Saas
+   * @return
+   */
   def createCloudlets(cloudletModel: CloudletModel = null, model: String): List[NetworkCloudlet] =
     model match {
       case "SaaS" if (cloudletModel != null) => (1 to saasServiceModel.CLOUDLET_NUMBER).map(id => createCloudlet(id, cloudletModel)).toList
@@ -56,6 +85,12 @@ case class ServiceUtils(val paasServiceModel: PaasServiceModel,
       case _ => throw new Exception("Wrong model passed while creating cloudlets. SaaS/PaaS/IaaS")
     }
 
+  /**
+   * Create a single cloudlet for a specific model
+   * @param id
+   * @param model
+   * @return
+   */
   def createCloudlet(id: Int, model: String): NetworkCloudlet = {
     model match {
       case "PaaS" => {
@@ -76,11 +111,12 @@ case class ServiceUtils(val paasServiceModel: PaasServiceModel,
 
   }
 
-  def getRandomLength(start: Long, end: Long): Long = {
-    val rnd = new Random
-    start + rnd.nextLong((end - start) + 1)
-  }
-
+  /**
+   * create a specific cloudlet when a pojo class [[CloudletModel]] is passed
+   * @param id
+   * @param cloudletModel
+   * @return
+   */
   def createCloudlet(id: Int, cloudletModel: CloudletModel): NetworkCloudlet = {
     val c = new NetworkCloudlet(id, getRandomLength(cloudletModel.minLength, cloudletModel.maxLength), cloudletModel.cloudletPes)
       .setFileSize(cloudletModel.fileSize)
@@ -89,6 +125,22 @@ case class ServiceUtils(val paasServiceModel: PaasServiceModel,
     c.addTask(new CloudletExecutionTask(id, getRandomLength(paasServiceModel.CLOUDLET_MIN_LEN, paasServiceModel.CLOUD_MAX_LEN)))
   }
 
+  /**
+   * This is used to implement random length for cloudlets
+   * @param start
+   * @param end
+   * @return
+   */
+  def getRandomLength(start: Long, end: Long): Long = {
+    val rnd = new Random
+    start + rnd.nextLong((end - start) + 1)
+  }
+
+  /**
+   * Create list of scalable Vms
+   * @param vmModel
+   * @return
+   */
   def createInitialScalableVms(vmModel: VMModel): List[Vm] =
     (1 to vmModel.vmNumber).map { _ =>
       val vm: Vm = createVm(vmModel)
@@ -98,6 +150,11 @@ case class ServiceUtils(val paasServiceModel: PaasServiceModel,
       vm
     }.toList
 
+  /**
+   * Create horizontal scaling Vms when Cpu goes beyond 70%
+   * @param vm
+   * @param vmModel
+   */
   def createHorizontalVmScaling(vm: Vm, vmModel: VMModel): Unit = {
     val horizontalVmScaling: HorizontalVmScaling = new HorizontalVmScalingSimple()
     horizontalVmScaling
@@ -106,10 +163,21 @@ case class ServiceUtils(val paasServiceModel: PaasServiceModel,
     vm.setHorizontalScaling(horizontalVmScaling)
   }
 
+  /**
+   * Checks if cpu is overloaded
+   * @param vm
+   * @return
+   */
   def isVmOverloaded(vm: Vm): Boolean = {
     vm.getCpuPercentUtilization > 0.7
   }
 
+  /**
+   * Adds execution task for network cloudlets
+   * @param networkCloudlet
+   * @param model
+   * @return
+   */
   def addExecutionTask(networkCloudlet: NetworkCloudlet, model: String) = {
     logger.info(s"Adding executionTask $networkCloudlet, $model")
     val task: CloudletExecutionTask = new CloudletExecutionTask(

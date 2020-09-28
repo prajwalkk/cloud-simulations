@@ -75,6 +75,7 @@ object Simulation5 extends App with LazyLogging {
   broker.setVmDestructionDelayFunction(vm => 10.0)
   broker.submitCloudletList((iaasCloudlets ::: paasCloudlets ::: saasCloudlets).asJava)
 
+  saasVms.map(println)
 
   simulation.start()
 

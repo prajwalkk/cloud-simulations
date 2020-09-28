@@ -1,15 +1,13 @@
 package com.prajwalkk.cloudsim
 
-import com.prajwalkk.cloudsim.utils.ServiceUtilities.SimpleJob
 import com.prajwalkk.cloudsim.utils.ProviderUtilities.ProviderUtils._
 import com.prajwalkk.cloudsim.utils.ServiceModels.IaasServiceModel
+import com.prajwalkk.cloudsim.utils.ServiceUtilities.SimpleJob
+import com.prajwalkk.custombuilder.CustomBuilder
 import com.typesafe.config.{Config, ConfigFactory}
 import com.typesafe.scalalogging.LazyLogging
 import org.cloudbus.cloudsim.brokers.DatacenterBrokerSimple
 import org.cloudbus.cloudsim.core.CloudSim
-import org.cloudsimplus.builders.tables.CloudletsTableBuilder
-import com.prajwalkk.cloudsim.utils.ServiceUtilities._
-import com.prajwalkk.custombuilder.CustomBuilder
 
 import scala.jdk.CollectionConverters._
 
@@ -19,11 +17,11 @@ import scala.jdk.CollectionConverters._
 * Date: 14-Sep-20
 *
 */
-object Simulation3 extends LazyLogging {
+object Simulation4 extends LazyLogging {
 
   def main(args: Array[String]): Unit = {
-    val config: Config = ConfigFactory.load("simulation3.conf")
-    val simConf = config.getConfig("simulation-three")
+    val config: Config = ConfigFactory.load("simulation4.conf")
+    val simConf = config.getConfig("simulation-four")
     val serviceModel = new IaasServiceModel("service1.conf")
     logger.info(s"${simConf.getString("description")}")
     val simulation = new CloudSim()

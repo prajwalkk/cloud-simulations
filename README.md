@@ -1,98 +1,646 @@
-# Homework 1
-### Description: create cloud simulators for evaluating executions of applications in cloud datacenters with different characteristics and deployment models.
-### Grade: 10% + bonus up to 5%
-#### You can obtain this Git repo using the command git clone git@bitbucket.org:cs441-fall2020/cs441_fall2020_hw1.git. Also, you can clone CloudSimPlus or ingest it directly into IntelliJ from its [website](https://cloudsimplus.org/) or the [Github repo](https://github.com/manoelcampos/cloudsim-plus).
+# CS 441 HW - 1
+### Description: Simulation of network datacenters with a particular configuration and varying of policies. Also using the observations to try simulate 3 DC cluster with different cloud models
+---
+Name: Prajwal Kishor Kammardi
+---
+#### Instructions
+##### Development Environment
++ **OS:** Windows 10 
++ **IDE** IntelliJ IDEA
++ **Java Version** 11.0.8
++ **Scala Version** 2.13.3
 
-## Preliminaries
-As part of  homework assignment you will gain experience with creating and managing your Git repository, obtaining an open-source cloud simulation infrastructure Java project from a public Git repo, creating JUnit tests, and creating your SBT build and run scripts for your simulation application. Doing this homework is essential for successful completion of the rest of this course, since all other homeworks and the course project will share the same features of this homework: branching, merging, committing, pushing your code into your Git repo, creating test cases and build scripts, and using various tools for diagnosing problems with virtual machines and your applications.
 
-First things first, you must create your account at [BitBucket](https://bitbucket.org/), a Git repo management system. It is imperative that you use your UIC email account that has the extension @uic.edu. Once you create an account with your UIC address, BibBucket will assign you an academic status that allows you to create private repos. Bitbucket users with free accounts cannot create private repos, which are essential for submitting your homeworks and the course project. Your instructor created a team for this class named [cs441-Fall2020](https://bitbucket.org/cs441-fall2020/). Please contact your TA, [Mr. Abhijeet Mohanty](amohan31@uic.edu) using your UIC.EDU email account and he will add you to the team repo as developers, since Mr.Mohanty already has the admin privileges. Please use your emails from the class registration roster to add you to the team and you will receive an invitation from BitBucket to join the team. Since it is a large class, please use your UIC email address for communications or Piazza and avoid emails from other accounts like funnybunny1992@gmail.com. If you don't receive a response within 12 hours, please contact us via Piazza, it may be a case that your direct emails went to the spam folder.
+##### Running the application
++ Clone the project 
++ On the console  
+```shell script
+ sbt clean compile test
+``` 
+```shell script
+sbt clean compile run
+```
+**Note**: There are 4 main classes in the project. These contain 4 different simulations. This will be shown when you run the `clean compile *` commands
 
-Next, if you haven't done so, you will install [IntelliJ](https://www.jetbrains.com/student/) with your academic license, the JDK, the Scala runtime and the IntelliJ Scala plugin and the [Simple Build Toolkit (SBT)](https://www.scala-sbt.org/1.x/docs/index.html) and make sure that you can create, compile, and run Java and Scala programs. Please make sure that you can run [various Java tools from your chosen JDK between versions 8 and 14](https://docs.oracle.com/en/java/javase/index.html).
+#### Details
+1. `ExampleSim` is a generic example project to just get a hang of Scala. It need not be tested.
+1. `Simulation[1 - 4]` are basic simulations. All simulate an IaaS system with different policies for VMAllocation (Time / SpaceShared). 1 and 2 have simple datacenter and 3 has Network datacenter. 
+1. `Simulation5` simulates a scenario with 3 datacenters. Each as SaaS, PaaS, IaaS. 
 
-In this and all consecutive homeworks and in the course project you will use logging and configuration management frameworks. You will comment your code extensively and supply logging statements at different logging levels (e.g., TRACE, INFO, ERROR) to record information at some salient points in the executions of your programs. All input and configuration variables must be supplied through configuration files -- hardcoding these values in the source code is prohibited and will be punished by taking a large percentage of points from your total grade! You are expected to use [Logback](https://logback.qos.ch/) and [SLFL4J](https://www.slf4j.org/) for logging and [Typesafe Conguration Library](https://github.com/lightbend/config) for managing configuration files. These and other libraries should be imported into your project using your script [build.sbt](https://www.scala-sbt.org/1.0/docs/Basic-Def-Examples.html). These libraries and frameworks are widely used in the industry, so learning them is the time well spent to improve your resumes.
+#### Basic Program Flow
+1. The main program are in the files `Simulation[1-4]`. That is 4 entry points each that can be executed one after other. Here a simulation object is created. Then respective datacenters Vms, Cloudlets, Hosts are created and then the simulation is run
+1. The utils package consists of the following: 
+    2. ``ProviderModels`` These have classes that model the different Cloud Models the Providers' perspective. (Saas, Paas, Iaas). these in turn contain Models of datacenter, switches, VM, Cloudlets
+    2. ``ProviderUtilities`` These have the methods that are use to convert the Plain model classes to cloudSim compatible classes. For Datacenters, hosts, switches. etc
+    2. ``ServiceModels``  These have classes that model cloudlets, VMs configurations from the client's perspective. 
+    2. ``ServiceUtilities`` These have classes that convert the plain model classes to cloudsim compatible instances
 
-Even though CloudSim Plus is written in Java, you can create your simulations using Scala, for which you will receive an additional bonus of up to 3%. No matter whether you use Java or Scala you should create a fully pure functional (not imperative) implementation. Since being proficient in Java is a prerequisite for this course, you will be expected to learn Scala as you go. As you see from the StackOverflow survey, knowledge of Scala is highly paid and in great demand, and it is expected that you pick it relatively fast, especially since it is tightly integrated with Java. I recommend using the book on Programming in Scala: Updated for Scala 2.12 published on May 10, 2016 by Martin Odersky and Lex Spoon. You can obtain this book using the academic subscription on Safari Books Online. There are many other books and resources available on the Internet to learn Scala. Those who know more about functional programming can use the book on Functional Programming in Scala published on Sep 14, 2014 by Paul Chiusano and Runar Bjarnason.
 
-To receive your bonus for writing your cloud simulation program code in Scala, you should avoid using **var**s and while/for loops that iterate over collections using [induction variables](https://en.wikipedia.org/wiki/Induction_variable). Instead, you should learn to use collection methods **map**, **flatMap**, **foreach**, **filter** and many others with lambda functions, which make your code linear and easy to understand. Also, avoid mutable variables that expose the internal states of your modules at all cost. Points will be deducted for having many **var**s and inductive variable loops without explanation why mutation is needed in your code unless it is confined to method scopes - you can always do without it.
+#### Assumptions made with regards to Provider and Consumer
 
-## Overview
-In this homework, you will experiment with creading cloud computing datacenters and running jobs on them. Of course, creating real cloud computing datacenters takes hundreds of millions of dollars and acres of land and a lot of complicated equipment, and you don't want to spend your money and resources creating physical cloud datacenters for this homework ;-). Instead, we have a cloud simulator, a software package that models the cloud environments and operates different cloud models that we study in the lectures. We will use *CloudSim Plus*, a simulation framework that is available from [Sourceforge](https://github.com/manoelcampos/cloudsim-plus). It is an extension of *CloudSim*, a framework and a set of libraries for modeling and simulating cloud computing infrastructure and services. It is a [publically available project in Github](https://github.com/Cloudslab/cloudsim).
+| Model | Provider | Consumer |
+|-------|----------|----------|
+|SaaS|The Provider has total control of the VMs, Hosts, DataCenter Characteristics(hardware), Cloudlet CHaractersitics|Consumer can only specify the number of Cloudlets (Which simulates him connecting to get the service)|
+|PaaS|The Provider has control over the VMs, Hosts, Datacenter Characteristics(hardware)|Consumer can specify the Cloudlet characteristics (Data) and Number of VMs (Middleware to some extent)|
+|IaaS|The Provider has control over only the hardware | Consumer has control over the VMs, Cloudlets| 
 
-[CloudSim Plus website](http://cloudsimplus.org/) contains a wealth of information and it is your starting point. It is recommended that you learn more about *CloudSim* -- you will find an [old online course on CloudSim](https://www.superwits.com/library/cloudsim-simulation-framework) and [a new resource on CloudSim](https://www.cloudsimtutorials.online/) and your starting point is to [download and configure CloudSim Plus](https://github.com/manoelcampos/cloudsim-plus) and to run examples that are provided in the Github repo. Those examples you will find under the section Examples on the main CloudSim Plus website. Those who want to read more about modeling physical systems and creating simulations can find ample resources on the Internet - I recommend the following paper by [Any Maria on Introduction to Modeling and Simulation](http://acqnotes.com/Attachments/White%20Paper%20Introduction%20to%20Modeling%20and%20Simulation%20by%20Anu%20Maria.pdf). 
 
-This homework script is written using a retroscripting technique, in which the homework outlines are generally and loosely drawn, and the individual students improvise to create the implementation that fits their refined objectives. In doing so, students are expected to stay within the basic requirements of the homework and they are free to experiments. Asking questions is important, so please ask away at Piazza!
+#### Policies compared 
+- Simple VM allocation Policy
+- First Fit VM Allocation Policy
+- Best Fit VM Allocation Policy
+- Space shared scheduler
+- Time shared VM scheduler
 
-## Functionality
-Once you installed and configured CloudSim Plus, your job is to run examples supplied with the frameworks to perform two or more simulations where you will evaluate two or more datacenters with different characteristics (e.g., operating systems, costs, devices) and policies. Imagine that you are a cloud computing broker and you purchase computing time in bulk from different cloud providers and you sell this time to your customers, so that they can execute their jobs, i.e., cloudlets on the infrastructure of these cloud providers that have different policies and constraints. As a broker, your job is to buy the computing time cheaply and sell it at a good markup. One way to achieve it is to take cloudlets from your customers and estimate how long they will execute. Then you charge for executing cloudlets some fixed fee that represent your cost of resources summarily. Some cloudlets may execute longer than you expected, the other execute faster. If your revenue exceeds your expenses for buying the cloud computing time in bulk, you are in business, otherwise, you will go bankrupt!
 
-There are different policies that datacenters can use for allocating Virtual Machines (VMs) to hosts, scheduling them for executions on those hosts, determining how network bandwidth is provisioned, and for scheduling cloudlets to execute on different VMs. Randomly assigning these cloudlets to different datacenters may result in situation where the executions of these cloudlets are inefficient and they takes a long time. As a result, you exhaust your supply of the purchased cloud time and you may have to refund the money to your customers, since you cannot fulfil the agreement, and you will go bankrupt. Modeling and simulating the executions of cloudlets in your clouds may help you chose a proper model for your business.
+#### Results
+Below are some of the results
 
-Once you installed and configured CloudSim and ran its examples, your next job will be to create simulations where you will evaluate a large cloud provider with many datacenters with different characteristics (e.g., operating systems, costs, devices) and policies. You will form a stream of jobs, dynamically, and feed them into your simulation. You will design your own datacenter with your own network switches and network links. You can organize cloudlets into tasks to accomplish the same job (e.g., a map reduce job where some cloudlets represent mappers and the other cloudlets represent reducers). There are different policies that datacenters can use for allocating Virtual Machines (VMs) to hosts, scheduling them for executions on those hosts, determining how network bandwidth is provisioned, and for scheduling cloudlets to execute on different VMs. Randomly assigning these cloudlets to different datacenters may result in situation where the execution is inefficient and takes a long time. Using a more clever algorithm like assigning tasks to specific clusters where the data is located may lead to more efficient cloud provider services.
+##### Default VM allocation policy. Simple Datacenter. TimeShared Scheduler
+```
+                                                                         SIMULATION RESULTS
 
-Consider a snippet of the code below from one of the examples that come from the documentation on CloudSim Plus. In it, a network cloud datacenter is created with network hardware that is used to organize hosts in a connected network. VMs can exchange packets/messages using a chosen network topology. Depending on your simulation construct, you may view different levels of performances.
-```java
-protected final NetworkDatacenter createDatacenter() {
-  final int numberOfHosts = EdgeSwitch.PORTS * AggregateSwitch.PORTS * RootSwitch.PORTS;
-  List<Host> hostList = new ArrayList<>(numberOfHosts);
-  for (int i = 0; i < numberOfHosts; i++) {
-      List<Pe> peList = createPEs(HOST_PES, HOST_MIPS);
-      Host host = new NetworkHost(HOST_RAM, HOST_BW, HOST_STORAGE, peList)
-                    .setRamProvisioner(new ResourceProvisionerSimple())
-                    .setBwProvisioner(new ResourceProvisionerSimple())
-                    .setVmScheduler(new VmSchedulerTimeShared());
-      hostList.add(host);
-  }
+Cloudlet|Status |DC|Host|Host PEs |VM|VM PEs   |CloudletLen|CloudletPEs|StartTime|FinishTime|ExecTime|Ram Utilized|Cost / Bw|Cost / s|Accumulated Bw Cost|Total Cost
+      ID|       |ID|  ID|CPU cores|ID|CPU cores|         MI|  CPU cores|  Seconds|   Seconds| Seconds|           %|        $|       $|                  $|         $
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------
+       0|SUCCESS| 1|   0|        4| 0|        4|      10000|          2|        0|        33|      33|        1.00|     0.01|    0.01|               0.01|      0.35
+       5|SUCCESS| 1|   0|        4| 0|        4|      10000|          2|        0|        33|      33|        1.00|     0.01|    0.01|               0.01|      0.35
+      10|SUCCESS| 1|   0|        4| 0|        4|      10000|          2|        0|        33|      33|        1.00|     0.01|    0.01|               0.01|      0.35
+      15|SUCCESS| 1|   0|        4| 0|        4|      10000|          2|        0|        33|      33|        1.00|     0.01|    0.01|               0.01|      0.35
+      20|SUCCESS| 1|   0|        4| 0|        4|      10000|          2|        0|        33|      33|        1.00|     0.01|    0.01|               0.01|      0.35
+      25|SUCCESS| 1|   0|        4| 0|        4|      10000|          2|        0|        33|      33|        1.00|     0.01|    0.01|               0.01|      0.35
+      30|SUCCESS| 1|   0|        4| 0|        4|      10000|          2|        0|        33|      33|        1.00|     0.01|    0.01|               0.01|      0.35
+      35|SUCCESS| 1|   0|        4| 0|        4|      10000|          2|        0|        33|      33|        1.00|     0.01|    0.01|               0.01|      0.35
+      40|SUCCESS| 1|   0|        4| 0|        4|      10000|          2|        0|        33|      33|        1.00|     0.01|    0.01|               0.01|      0.35
+      45|SUCCESS| 1|   0|        4| 0|        4|      10000|          2|        0|        33|      33|        1.00|     0.01|    0.01|               0.01|      0.35
+      50|SUCCESS| 1|   0|        4| 0|        4|      10000|          2|        0|        33|      33|        1.00|     0.01|    0.01|               0.01|      0.35
+      55|SUCCESS| 1|   0|        4| 0|        4|      10000|          2|        0|        33|      33|        1.00|     0.01|    0.01|               0.01|      0.35
+      60|SUCCESS| 1|   0|        4| 0|        4|      10000|          2|        0|        33|      33|        1.00|     0.01|    0.01|               0.01|      0.35
+      65|SUCCESS| 1|   0|        4| 0|        4|      10000|          2|        0|        33|      33|        1.00|     0.01|    0.01|               0.01|      0.35
+      70|SUCCESS| 1|   0|        4| 0|        4|      10000|          2|        0|        33|      33|        1.00|     0.01|    0.01|               0.01|      0.35
+      75|SUCCESS| 1|   0|        4| 0|        4|      10000|          2|        0|        33|      33|        1.00|     0.01|    0.01|               0.01|      0.35
+      80|SUCCESS| 1|   0|        4| 0|        4|      10000|          2|        0|        33|      33|        1.00|     0.01|    0.01|               0.01|      0.35
+      85|SUCCESS| 1|   0|        4| 0|        4|      10000|          2|        0|        33|      33|        1.00|     0.01|    0.01|               0.01|      0.35
+      90|SUCCESS| 1|   0|        4| 0|        4|      10000|          2|        0|        33|      33|        1.00|     0.01|    0.01|               0.01|      0.35
+      95|SUCCESS| 1|   0|        4| 0|        4|      10000|          2|        0|        33|      33|        1.00|     0.01|    0.01|               0.01|      0.35
+       1|SUCCESS| 1|   1|        4| 1|        4|      10000|          2|        0|        33|      33|        1.00|     0.01|    0.01|               0.01|      0.35
+       6|SUCCESS| 1|   1|        4| 1|        4|      10000|          2|        0|        33|      33|        1.00|     0.01|    0.01|               0.01|      0.35
+      11|SUCCESS| 1|   1|        4| 1|        4|      10000|          2|        0|        33|      33|        1.00|     0.01|    0.01|               0.01|      0.35
+      16|SUCCESS| 1|   1|        4| 1|        4|      10000|          2|        0|        33|      33|        1.00|     0.01|    0.01|               0.01|      0.35
+      21|SUCCESS| 1|   1|        4| 1|        4|      10000|          2|        0|        33|      33|        1.00|     0.01|    0.01|               0.01|      0.35
+      26|SUCCESS| 1|   1|        4| 1|        4|      10000|          2|        0|        33|      33|        1.00|     0.01|    0.01|               0.01|      0.35
+      31|SUCCESS| 1|   1|        4| 1|        4|      10000|          2|        0|        33|      33|        1.00|     0.01|    0.01|               0.01|      0.35
+      36|SUCCESS| 1|   1|        4| 1|        4|      10000|          2|        0|        33|      33|        1.00|     0.01|    0.01|               0.01|      0.35
+      41|SUCCESS| 1|   1|        4| 1|        4|      10000|          2|        0|        33|      33|        1.00|     0.01|    0.01|               0.01|      0.35
+      46|SUCCESS| 1|   1|        4| 1|        4|      10000|          2|        0|        33|      33|        1.00|     0.01|    0.01|               0.01|      0.35
+      51|SUCCESS| 1|   1|        4| 1|        4|      10000|          2|        0|        33|      33|        1.00|     0.01|    0.01|               0.01|      0.35
+      56|SUCCESS| 1|   1|        4| 1|        4|      10000|          2|        0|        33|      33|        1.00|     0.01|    0.01|               0.01|      0.35
+      61|SUCCESS| 1|   1|        4| 1|        4|      10000|          2|        0|        33|      33|        1.00|     0.01|    0.01|               0.01|      0.35
+      66|SUCCESS| 1|   1|        4| 1|        4|      10000|          2|        0|        33|      33|        1.00|     0.01|    0.01|               0.01|      0.35
+      71|SUCCESS| 1|   1|        4| 1|        4|      10000|          2|        0|        33|      33|        1.00|     0.01|    0.01|               0.01|      0.35
+      76|SUCCESS| 1|   1|        4| 1|        4|      10000|          2|        0|        33|      33|        1.00|     0.01|    0.01|               0.01|      0.35
+      81|SUCCESS| 1|   1|        4| 1|        4|      10000|          2|        0|        33|      33|        1.00|     0.01|    0.01|               0.01|      0.35
+      86|SUCCESS| 1|   1|        4| 1|        4|      10000|          2|        0|        33|      33|        1.00|     0.01|    0.01|               0.01|      0.35
+      91|SUCCESS| 1|   1|        4| 1|        4|      10000|          2|        0|        33|      33|        1.00|     0.01|    0.01|               0.01|      0.35
+      96|SUCCESS| 1|   1|        4| 1|        4|      10000|          2|        0|        33|      33|        1.00|     0.01|    0.01|               0.01|      0.35
+       2|SUCCESS| 1|   2|        4| 2|        4|      10000|          2|        0|        33|      33|        1.00|     0.01|    0.01|               0.01|      0.35
+       7|SUCCESS| 1|   2|        4| 2|        4|      10000|          2|        0|        33|      33|        1.00|     0.01|    0.01|               0.01|      0.35
+      12|SUCCESS| 1|   2|        4| 2|        4|      10000|          2|        0|        33|      33|        1.00|     0.01|    0.01|               0.01|      0.35
+      17|SUCCESS| 1|   2|        4| 2|        4|      10000|          2|        0|        33|      33|        1.00|     0.01|    0.01|               0.01|      0.35
+      22|SUCCESS| 1|   2|        4| 2|        4|      10000|          2|        0|        33|      33|        1.00|     0.01|    0.01|               0.01|      0.35
+      27|SUCCESS| 1|   2|        4| 2|        4|      10000|          2|        0|        33|      33|        1.00|     0.01|    0.01|               0.01|      0.35
+      32|SUCCESS| 1|   2|        4| 2|        4|      10000|          2|        0|        33|      33|        1.00|     0.01|    0.01|               0.01|      0.35
+      37|SUCCESS| 1|   2|        4| 2|        4|      10000|          2|        0|        33|      33|        1.00|     0.01|    0.01|               0.01|      0.35
+      42|SUCCESS| 1|   2|        4| 2|        4|      10000|          2|        0|        33|      33|        1.00|     0.01|    0.01|               0.01|      0.35
+      47|SUCCESS| 1|   2|        4| 2|        4|      10000|          2|        0|        33|      33|        1.00|     0.01|    0.01|               0.01|      0.35
+      52|SUCCESS| 1|   2|        4| 2|        4|      10000|          2|        0|        33|      33|        1.00|     0.01|    0.01|               0.01|      0.35
+      57|SUCCESS| 1|   2|        4| 2|        4|      10000|          2|        0|        33|      33|        1.00|     0.01|    0.01|               0.01|      0.35
+      62|SUCCESS| 1|   2|        4| 2|        4|      10000|          2|        0|        33|      33|        1.00|     0.01|    0.01|               0.01|      0.35
+      67|SUCCESS| 1|   2|        4| 2|        4|      10000|          2|        0|        33|      33|        1.00|     0.01|    0.01|               0.01|      0.35
+      72|SUCCESS| 1|   2|        4| 2|        4|      10000|          2|        0|        33|      33|        1.00|     0.01|    0.01|               0.01|      0.35
+      77|SUCCESS| 1|   2|        4| 2|        4|      10000|          2|        0|        33|      33|        1.00|     0.01|    0.01|               0.01|      0.35
+      82|SUCCESS| 1|   2|        4| 2|        4|      10000|          2|        0|        33|      33|        1.00|     0.01|    0.01|               0.01|      0.35
+      87|SUCCESS| 1|   2|        4| 2|        4|      10000|          2|        0|        33|      33|        1.00|     0.01|    0.01|               0.01|      0.35
+      92|SUCCESS| 1|   2|        4| 2|        4|      10000|          2|        0|        33|      33|        1.00|     0.01|    0.01|               0.01|      0.35
+      97|SUCCESS| 1|   2|        4| 2|        4|      10000|          2|        0|        33|      33|        1.00|     0.01|    0.01|               0.01|      0.35
+       3|SUCCESS| 1|   3|        4| 3|        4|      10000|          2|        0|        33|      33|        1.00|     0.01|    0.01|               0.01|      0.35
+       8|SUCCESS| 1|   3|        4| 3|        4|      10000|          2|        0|        33|      33|        1.00|     0.01|    0.01|               0.01|      0.35
+      13|SUCCESS| 1|   3|        4| 3|        4|      10000|          2|        0|        33|      33|        1.00|     0.01|    0.01|               0.01|      0.35
+      18|SUCCESS| 1|   3|        4| 3|        4|      10000|          2|        0|        33|      33|        1.00|     0.01|    0.01|               0.01|      0.35
+      23|SUCCESS| 1|   3|        4| 3|        4|      10000|          2|        0|        33|      33|        1.00|     0.01|    0.01|               0.01|      0.35
+      28|SUCCESS| 1|   3|        4| 3|        4|      10000|          2|        0|        33|      33|        1.00|     0.01|    0.01|               0.01|      0.35
+      33|SUCCESS| 1|   3|        4| 3|        4|      10000|          2|        0|        33|      33|        1.00|     0.01|    0.01|               0.01|      0.35
+      38|SUCCESS| 1|   3|        4| 3|        4|      10000|          2|        0|        33|      33|        1.00|     0.01|    0.01|               0.01|      0.35
+      43|SUCCESS| 1|   3|        4| 3|        4|      10000|          2|        0|        33|      33|        1.00|     0.01|    0.01|               0.01|      0.35
+      48|SUCCESS| 1|   3|        4| 3|        4|      10000|          2|        0|        33|      33|        1.00|     0.01|    0.01|               0.01|      0.35
+      53|SUCCESS| 1|   3|        4| 3|        4|      10000|          2|        0|        33|      33|        1.00|     0.01|    0.01|               0.01|      0.35
+      58|SUCCESS| 1|   3|        4| 3|        4|      10000|          2|        0|        33|      33|        1.00|     0.01|    0.01|               0.01|      0.35
+      63|SUCCESS| 1|   3|        4| 3|        4|      10000|          2|        0|        33|      33|        1.00|     0.01|    0.01|               0.01|      0.35
+      68|SUCCESS| 1|   3|        4| 3|        4|      10000|          2|        0|        33|      33|        1.00|     0.01|    0.01|               0.01|      0.35
+      73|SUCCESS| 1|   3|        4| 3|        4|      10000|          2|        0|        33|      33|        1.00|     0.01|    0.01|               0.01|      0.35
+      78|SUCCESS| 1|   3|        4| 3|        4|      10000|          2|        0|        33|      33|        1.00|     0.01|    0.01|               0.01|      0.35
+      83|SUCCESS| 1|   3|        4| 3|        4|      10000|          2|        0|        33|      33|        1.00|     0.01|    0.01|               0.01|      0.35
+      88|SUCCESS| 1|   3|        4| 3|        4|      10000|          2|        0|        33|      33|        1.00|     0.01|    0.01|               0.01|      0.35
+      93|SUCCESS| 1|   3|        4| 3|        4|      10000|          2|        0|        33|      33|        1.00|     0.01|    0.01|               0.01|      0.35
+      98|SUCCESS| 1|   3|        4| 3|        4|      10000|          2|        0|        33|      33|        1.00|     0.01|    0.01|               0.01|      0.35
+       4|SUCCESS| 1|   4|        4| 4|        4|      10000|          2|        0|        33|      33|        1.00|     0.01|    0.01|               0.01|      0.35
+       9|SUCCESS| 1|   4|        4| 4|        4|      10000|          2|        0|        33|      33|        1.00|     0.01|    0.01|               0.01|      0.35
+      14|SUCCESS| 1|   4|        4| 4|        4|      10000|          2|        0|        33|      33|        1.00|     0.01|    0.01|               0.01|      0.35
+      19|SUCCESS| 1|   4|        4| 4|        4|      10000|          2|        0|        33|      33|        1.00|     0.01|    0.01|               0.01|      0.35
+      24|SUCCESS| 1|   4|        4| 4|        4|      10000|          2|        0|        33|      33|        1.00|     0.01|    0.01|               0.01|      0.35
+      29|SUCCESS| 1|   4|        4| 4|        4|      10000|          2|        0|        33|      33|        1.00|     0.01|    0.01|               0.01|      0.35
+      34|SUCCESS| 1|   4|        4| 4|        4|      10000|          2|        0|        33|      33|        1.00|     0.01|    0.01|               0.01|      0.35
+      39|SUCCESS| 1|   4|        4| 4|        4|      10000|          2|        0|        33|      33|        1.00|     0.01|    0.01|               0.01|      0.35
+      44|SUCCESS| 1|   4|        4| 4|        4|      10000|          2|        0|        33|      33|        1.00|     0.01|    0.01|               0.01|      0.35
+      49|SUCCESS| 1|   4|        4| 4|        4|      10000|          2|        0|        33|      33|        1.00|     0.01|    0.01|               0.01|      0.35
+      54|SUCCESS| 1|   4|        4| 4|        4|      10000|          2|        0|        33|      33|        1.00|     0.01|    0.01|               0.01|      0.35
+      59|SUCCESS| 1|   4|        4| 4|        4|      10000|          2|        0|        33|      33|        1.00|     0.01|    0.01|               0.01|      0.35
+      64|SUCCESS| 1|   4|        4| 4|        4|      10000|          2|        0|        33|      33|        1.00|     0.01|    0.01|               0.01|      0.35
+      69|SUCCESS| 1|   4|        4| 4|        4|      10000|          2|        0|        33|      33|        1.00|     0.01|    0.01|               0.01|      0.35
+      74|SUCCESS| 1|   4|        4| 4|        4|      10000|          2|        0|        33|      33|        1.00|     0.01|    0.01|               0.01|      0.35
+      79|SUCCESS| 1|   4|        4| 4|        4|      10000|          2|        0|        33|      33|        1.00|     0.01|    0.01|               0.01|      0.35
+      84|SUCCESS| 1|   4|        4| 4|        4|      10000|          2|        0|        33|      33|        1.00|     0.01|    0.01|               0.01|      0.35
+      89|SUCCESS| 1|   4|        4| 4|        4|      10000|          2|        0|        33|      33|        1.00|     0.01|    0.01|               0.01|      0.35
+      94|SUCCESS| 1|   4|        4| 4|        4|      10000|          2|        0|        33|      33|        1.00|     0.01|    0.01|               0.01|      0.35
+      99|SUCCESS| 1|   4|        4| 4|        4|      10000|          2|        0|        33|      33|        1.00|     0.01|    0.01|               0.01|      0.35
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------
+[success] Total time: 6 s, completed Sep 27, 2020, 7:54:10 PM
+[IJ]sbt:Prajwal_Kammardi_HW1>
+```
+##### Default VM allocation policy. Simple Datacenter. SpacedShared VM scheduling policy
+```
+                                                                         SIMULATION RESULTS
 
-  NetworkDatacenter dc =
-          new NetworkDatacenter(
-                  simulation, hostList, new VmAllocationPolicySimple());
-  dc.setSchedulingInterval(SCHEDULING_INTERVAL);
-  dc.getCharacteristics()
-        .setCostPerSecond(COST)
-        .setCostPerMem(COST_PER_MEM)
-        .setCostPerStorage(COST_PER_STORAGE)
-        .setCostPerBw(COST_PER_BW);
-  createNetwork(dc);
-  return dc;
-}
+Cloudlet|Status |DC|Host|Host PEs |VM|VM PEs   |CloudletLen|CloudletPEs|StartTime|FinishTime|ExecTime|Ram Utilized|Cost / Bw|Cost / s|Accumulated Bw Cost|Total Cost
+      ID|       |ID|  ID|CPU cores|ID|CPU cores|         MI|  CPU cores|  Seconds|   Seconds| Seconds|           %|        $|       $|                  $|         $
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------
+       0|SUCCESS| 1|   0|        4| 0|        4|      10000|          2|        0|        33|      33|        1.00|     0.01|    0.01|               0.01|      0.35
+       5|SUCCESS| 1|   0|        4| 0|        4|      10000|          2|        0|        33|      33|        1.00|     0.01|    0.01|               0.01|      0.35
+      10|SUCCESS| 1|   0|        4| 0|        4|      10000|          2|        0|        33|      33|        1.00|     0.01|    0.01|               0.01|      0.35
+      15|SUCCESS| 1|   0|        4| 0|        4|      10000|          2|        0|        33|      33|        1.00|     0.01|    0.01|               0.01|      0.35
+      20|SUCCESS| 1|   0|        4| 0|        4|      10000|          2|        0|        33|      33|        1.00|     0.01|    0.01|               0.01|      0.35
+      25|SUCCESS| 1|   0|        4| 0|        4|      10000|          2|        0|        33|      33|        1.00|     0.01|    0.01|               0.01|      0.35
+      30|SUCCESS| 1|   0|        4| 0|        4|      10000|          2|        0|        33|      33|        1.00|     0.01|    0.01|               0.01|      0.35
+      35|SUCCESS| 1|   0|        4| 0|        4|      10000|          2|        0|        33|      33|        1.00|     0.01|    0.01|               0.01|      0.35
+      40|SUCCESS| 1|   0|        4| 0|        4|      10000|          2|        0|        33|      33|        1.00|     0.01|    0.01|               0.01|      0.35
+      45|SUCCESS| 1|   0|        4| 0|        4|      10000|          2|        0|        33|      33|        1.00|     0.01|    0.01|               0.01|      0.35
+      50|SUCCESS| 1|   0|        4| 0|        4|      10000|          2|        0|        33|      33|        1.00|     0.01|    0.01|               0.01|      0.35
+      55|SUCCESS| 1|   0|        4| 0|        4|      10000|          2|        0|        33|      33|        1.00|     0.01|    0.01|               0.01|      0.35
+      60|SUCCESS| 1|   0|        4| 0|        4|      10000|          2|        0|        33|      33|        1.00|     0.01|    0.01|               0.01|      0.35
+      65|SUCCESS| 1|   0|        4| 0|        4|      10000|          2|        0|        33|      33|        1.00|     0.01|    0.01|               0.01|      0.35
+      70|SUCCESS| 1|   0|        4| 0|        4|      10000|          2|        0|        33|      33|        1.00|     0.01|    0.01|               0.01|      0.35
+      75|SUCCESS| 1|   0|        4| 0|        4|      10000|          2|        0|        33|      33|        1.00|     0.01|    0.01|               0.01|      0.35
+      80|SUCCESS| 1|   0|        4| 0|        4|      10000|          2|        0|        33|      33|        1.00|     0.01|    0.01|               0.01|      0.35
+      85|SUCCESS| 1|   0|        4| 0|        4|      10000|          2|        0|        33|      33|        1.00|     0.01|    0.01|               0.01|      0.35
+      90|SUCCESS| 1|   0|        4| 0|        4|      10000|          2|        0|        33|      33|        1.00|     0.01|    0.01|               0.01|      0.35
+      95|SUCCESS| 1|   0|        4| 0|        4|      10000|          2|        0|        33|      33|        1.00|     0.01|    0.01|               0.01|      0.35
+       1|SUCCESS| 1|   1|        4| 1|        4|      10000|          2|        0|        33|      33|        1.00|     0.01|    0.01|               0.01|      0.35
+       6|SUCCESS| 1|   1|        4| 1|        4|      10000|          2|        0|        33|      33|        1.00|     0.01|    0.01|               0.01|      0.35
+      11|SUCCESS| 1|   1|        4| 1|        4|      10000|          2|        0|        33|      33|        1.00|     0.01|    0.01|               0.01|      0.35
+      16|SUCCESS| 1|   1|        4| 1|        4|      10000|          2|        0|        33|      33|        1.00|     0.01|    0.01|               0.01|      0.35
+      21|SUCCESS| 1|   1|        4| 1|        4|      10000|          2|        0|        33|      33|        1.00|     0.01|    0.01|               0.01|      0.35
+      26|SUCCESS| 1|   1|        4| 1|        4|      10000|          2|        0|        33|      33|        1.00|     0.01|    0.01|               0.01|      0.35
+      31|SUCCESS| 1|   1|        4| 1|        4|      10000|          2|        0|        33|      33|        1.00|     0.01|    0.01|               0.01|      0.35
+      36|SUCCESS| 1|   1|        4| 1|        4|      10000|          2|        0|        33|      33|        1.00|     0.01|    0.01|               0.01|      0.35
+      41|SUCCESS| 1|   1|        4| 1|        4|      10000|          2|        0|        33|      33|        1.00|     0.01|    0.01|               0.01|      0.35
+      46|SUCCESS| 1|   1|        4| 1|        4|      10000|          2|        0|        33|      33|        1.00|     0.01|    0.01|               0.01|      0.35
+      51|SUCCESS| 1|   1|        4| 1|        4|      10000|          2|        0|        33|      33|        1.00|     0.01|    0.01|               0.01|      0.35
+      56|SUCCESS| 1|   1|        4| 1|        4|      10000|          2|        0|        33|      33|        1.00|     0.01|    0.01|               0.01|      0.35
+      61|SUCCESS| 1|   1|        4| 1|        4|      10000|          2|        0|        33|      33|        1.00|     0.01|    0.01|               0.01|      0.35
+      66|SUCCESS| 1|   1|        4| 1|        4|      10000|          2|        0|        33|      33|        1.00|     0.01|    0.01|               0.01|      0.35
+      71|SUCCESS| 1|   1|        4| 1|        4|      10000|          2|        0|        33|      33|        1.00|     0.01|    0.01|               0.01|      0.35
+      76|SUCCESS| 1|   1|        4| 1|        4|      10000|          2|        0|        33|      33|        1.00|     0.01|    0.01|               0.01|      0.35
+      81|SUCCESS| 1|   1|        4| 1|        4|      10000|          2|        0|        33|      33|        1.00|     0.01|    0.01|               0.01|      0.35
+      86|SUCCESS| 1|   1|        4| 1|        4|      10000|          2|        0|        33|      33|        1.00|     0.01|    0.01|               0.01|      0.35
+      91|SUCCESS| 1|   1|        4| 1|        4|      10000|          2|        0|        33|      33|        1.00|     0.01|    0.01|               0.01|      0.35
+      96|SUCCESS| 1|   1|        4| 1|        4|      10000|          2|        0|        33|      33|        1.00|     0.01|    0.01|               0.01|      0.35
+       2|SUCCESS| 1|   2|        4| 2|        4|      10000|          2|        0|        33|      33|        1.00|     0.01|    0.01|               0.01|      0.35
+       7|SUCCESS| 1|   2|        4| 2|        4|      10000|          2|        0|        33|      33|        1.00|     0.01|    0.01|               0.01|      0.35
+      12|SUCCESS| 1|   2|        4| 2|        4|      10000|          2|        0|        33|      33|        1.00|     0.01|    0.01|               0.01|      0.35
+      17|SUCCESS| 1|   2|        4| 2|        4|      10000|          2|        0|        33|      33|        1.00|     0.01|    0.01|               0.01|      0.35
+      22|SUCCESS| 1|   2|        4| 2|        4|      10000|          2|        0|        33|      33|        1.00|     0.01|    0.01|               0.01|      0.35
+      27|SUCCESS| 1|   2|        4| 2|        4|      10000|          2|        0|        33|      33|        1.00|     0.01|    0.01|               0.01|      0.35
+      32|SUCCESS| 1|   2|        4| 2|        4|      10000|          2|        0|        33|      33|        1.00|     0.01|    0.01|               0.01|      0.35
+      37|SUCCESS| 1|   2|        4| 2|        4|      10000|          2|        0|        33|      33|        1.00|     0.01|    0.01|               0.01|      0.35
+      42|SUCCESS| 1|   2|        4| 2|        4|      10000|          2|        0|        33|      33|        1.00|     0.01|    0.01|               0.01|      0.35
+      47|SUCCESS| 1|   2|        4| 2|        4|      10000|          2|        0|        33|      33|        1.00|     0.01|    0.01|               0.01|      0.35
+      52|SUCCESS| 1|   2|        4| 2|        4|      10000|          2|        0|        33|      33|        1.00|     0.01|    0.01|               0.01|      0.35
+      57|SUCCESS| 1|   2|        4| 2|        4|      10000|          2|        0|        33|      33|        1.00|     0.01|    0.01|               0.01|      0.35
+      62|SUCCESS| 1|   2|        4| 2|        4|      10000|          2|        0|        33|      33|        1.00|     0.01|    0.01|               0.01|      0.35
+      67|SUCCESS| 1|   2|        4| 2|        4|      10000|          2|        0|        33|      33|        1.00|     0.01|    0.01|               0.01|      0.35
+      72|SUCCESS| 1|   2|        4| 2|        4|      10000|          2|        0|        33|      33|        1.00|     0.01|    0.01|               0.01|      0.35
+      77|SUCCESS| 1|   2|        4| 2|        4|      10000|          2|        0|        33|      33|        1.00|     0.01|    0.01|               0.01|      0.35
+      82|SUCCESS| 1|   2|        4| 2|        4|      10000|          2|        0|        33|      33|        1.00|     0.01|    0.01|               0.01|      0.35
+      87|SUCCESS| 1|   2|        4| 2|        4|      10000|          2|        0|        33|      33|        1.00|     0.01|    0.01|               0.01|      0.35
+      92|SUCCESS| 1|   2|        4| 2|        4|      10000|          2|        0|        33|      33|        1.00|     0.01|    0.01|               0.01|      0.35
+      97|SUCCESS| 1|   2|        4| 2|        4|      10000|          2|        0|        33|      33|        1.00|     0.01|    0.01|               0.01|      0.35
+       3|SUCCESS| 1|   3|        4| 3|        4|      10000|          2|        0|        33|      33|        1.00|     0.01|    0.01|               0.01|      0.35
+       8|SUCCESS| 1|   3|        4| 3|        4|      10000|          2|        0|        33|      33|        1.00|     0.01|    0.01|               0.01|      0.35
+      13|SUCCESS| 1|   3|        4| 3|        4|      10000|          2|        0|        33|      33|        1.00|     0.01|    0.01|               0.01|      0.35
+      18|SUCCESS| 1|   3|        4| 3|        4|      10000|          2|        0|        33|      33|        1.00|     0.01|    0.01|               0.01|      0.35
+      23|SUCCESS| 1|   3|        4| 3|        4|      10000|          2|        0|        33|      33|        1.00|     0.01|    0.01|               0.01|      0.35
+      28|SUCCESS| 1|   3|        4| 3|        4|      10000|          2|        0|        33|      33|        1.00|     0.01|    0.01|               0.01|      0.35
+      33|SUCCESS| 1|   3|        4| 3|        4|      10000|          2|        0|        33|      33|        1.00|     0.01|    0.01|               0.01|      0.35
+      38|SUCCESS| 1|   3|        4| 3|        4|      10000|          2|        0|        33|      33|        1.00|     0.01|    0.01|               0.01|      0.35
+      43|SUCCESS| 1|   3|        4| 3|        4|      10000|          2|        0|        33|      33|        1.00|     0.01|    0.01|               0.01|      0.35
+      48|SUCCESS| 1|   3|        4| 3|        4|      10000|          2|        0|        33|      33|        1.00|     0.01|    0.01|               0.01|      0.35
+      53|SUCCESS| 1|   3|        4| 3|        4|      10000|          2|        0|        33|      33|        1.00|     0.01|    0.01|               0.01|      0.35
+      58|SUCCESS| 1|   3|        4| 3|        4|      10000|          2|        0|        33|      33|        1.00|     0.01|    0.01|               0.01|      0.35
+      63|SUCCESS| 1|   3|        4| 3|        4|      10000|          2|        0|        33|      33|        1.00|     0.01|    0.01|               0.01|      0.35
+      68|SUCCESS| 1|   3|        4| 3|        4|      10000|          2|        0|        33|      33|        1.00|     0.01|    0.01|               0.01|      0.35
+      73|SUCCESS| 1|   3|        4| 3|        4|      10000|          2|        0|        33|      33|        1.00|     0.01|    0.01|               0.01|      0.35
+      78|SUCCESS| 1|   3|        4| 3|        4|      10000|          2|        0|        33|      33|        1.00|     0.01|    0.01|               0.01|      0.35
+      83|SUCCESS| 1|   3|        4| 3|        4|      10000|          2|        0|        33|      33|        1.00|     0.01|    0.01|               0.01|      0.35
+      88|SUCCESS| 1|   3|        4| 3|        4|      10000|          2|        0|        33|      33|        1.00|     0.01|    0.01|               0.01|      0.35
+      93|SUCCESS| 1|   3|        4| 3|        4|      10000|          2|        0|        33|      33|        1.00|     0.01|    0.01|               0.01|      0.35
+      98|SUCCESS| 1|   3|        4| 3|        4|      10000|          2|        0|        33|      33|        1.00|     0.01|    0.01|               0.01|      0.35
+       4|SUCCESS| 1|   4|        4| 4|        4|      10000|          2|        0|        33|      33|        1.00|     0.01|    0.01|               0.01|      0.35
+       9|SUCCESS| 1|   4|        4| 4|        4|      10000|          2|        0|        33|      33|        1.00|     0.01|    0.01|               0.01|      0.35
+      14|SUCCESS| 1|   4|        4| 4|        4|      10000|          2|        0|        33|      33|        1.00|     0.01|    0.01|               0.01|      0.35
+      19|SUCCESS| 1|   4|        4| 4|        4|      10000|          2|        0|        33|      33|        1.00|     0.01|    0.01|               0.01|      0.35
+      24|SUCCESS| 1|   4|        4| 4|        4|      10000|          2|        0|        33|      33|        1.00|     0.01|    0.01|               0.01|      0.35
+      29|SUCCESS| 1|   4|        4| 4|        4|      10000|          2|        0|        33|      33|        1.00|     0.01|    0.01|               0.01|      0.35
+      34|SUCCESS| 1|   4|        4| 4|        4|      10000|          2|        0|        33|      33|        1.00|     0.01|    0.01|               0.01|      0.35
+      39|SUCCESS| 1|   4|        4| 4|        4|      10000|          2|        0|        33|      33|        1.00|     0.01|    0.01|               0.01|      0.35
+      44|SUCCESS| 1|   4|        4| 4|        4|      10000|          2|        0|        33|      33|        1.00|     0.01|    0.01|               0.01|      0.35
+      49|SUCCESS| 1|   4|        4| 4|        4|      10000|          2|        0|        33|      33|        1.00|     0.01|    0.01|               0.01|      0.35
+      54|SUCCESS| 1|   4|        4| 4|        4|      10000|          2|        0|        33|      33|        1.00|     0.01|    0.01|               0.01|      0.35
+      59|SUCCESS| 1|   4|        4| 4|        4|      10000|          2|        0|        33|      33|        1.00|     0.01|    0.01|               0.01|      0.35
+      64|SUCCESS| 1|   4|        4| 4|        4|      10000|          2|        0|        33|      33|        1.00|     0.01|    0.01|               0.01|      0.35
+      69|SUCCESS| 1|   4|        4| 4|        4|      10000|          2|        0|        33|      33|        1.00|     0.01|    0.01|               0.01|      0.35
+      74|SUCCESS| 1|   4|        4| 4|        4|      10000|          2|        0|        33|      33|        1.00|     0.01|    0.01|               0.01|      0.35
+      79|SUCCESS| 1|   4|        4| 4|        4|      10000|          2|        0|        33|      33|        1.00|     0.01|    0.01|               0.01|      0.35
+      84|SUCCESS| 1|   4|        4| 4|        4|      10000|          2|        0|        33|      33|        1.00|     0.01|    0.01|               0.01|      0.35
+      89|SUCCESS| 1|   4|        4| 4|        4|      10000|          2|        0|        33|      33|        1.00|     0.01|    0.01|               0.01|      0.35
+      94|SUCCESS| 1|   4|        4| 4|        4|      10000|          2|        0|        33|      33|        1.00|     0.01|    0.01|               0.01|      0.35
+      99|SUCCESS| 1|   4|        4| 4|        4|      10000|          2|        0|        33|      33|        1.00|     0.01|    0.01|               0.01|      0.35
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------
+[success] Total time: 2 s, completed Sep 27, 2020, 7:57:06 PM
+[IJ]sbt:Prajwal_Kammardi_HW1>
 ```
 
-Your homework can be divided roughly into five steps. First, you learn how CloudSim Plus is organized and what your building blocks from the CloudSim framework you will use. You should import the source code of CloudSim Plus into IntelliJ and explore its classes, interfaces, and dependencies. Second, you design your own cloud provider organization down to rack/cluster organization as we will study in our lectures. You will add various policies and load balancing heuristics like randomly allocating tasks to machines or using data locality to guide the task allocation. Next, you will create an implementation of the simulation(s) of your cloud provider using CloudSim. Fourth, you will run multiple simulations with different parameters, statistically analyze the results and report them in your documentation with explanations why some cloud architectures are more efficient than the others in your simulations. 
+##### FirstFit VM allocation policy. Network Datacenter.
+```
 
-### For the students who use the main textbook, in the final fifth step is the following. You will implement three datacenters each of which offers different mixes of SaaS, PaaS, IaaS and FaaS model implementations with various pricing criteria. A broker will decide to which datacenter your tasks will be sent based on additional information provided with those tasks, e.g., accessing SaaS services of some application or deploying your own software stack that will service some tasks. You will describe your design of the implementation of your simulation and how your cloud organizations/pricing models lead to different results and explain these results.
+                                                                         SIMULATION RESULTS
 
-### For the students who use the alternative textbooks, in the final fifth step you will create a simulation that shows how broadcast storm is created in the cloud that is described in one of the alternative textbook. After creating two or more datacenters the implementation should result in a situation where the load is bounced between these datacenters putting a significant overhead on the network communication with little actual work done by the VMs. Understanding the process and implementing it can be done without any regard for a particular cloud service model.
+Cloudlet|Status |DC|Host|Host PEs |VM|VM PEs   |CloudletLen|CloudletPEs|StartTime|FinishTime|ExecTime|Ram Utilized|Cost / Bw|Cost / s|Accumulated Bw Cost|Total Cost
+      ID|       |ID|  ID|CPU cores|ID|CPU cores|         MI|  CPU cores|  Seconds|   Seconds| Seconds|           %|        $|       $|                  $|         $
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------
+       0|SUCCESS| 1|   0|        4| 0|        4|      10000|          2|        0|        42|      42|        1.00|     0.01|    0.01|               0.01|      0.44
+       4|SUCCESS| 1|   0|        4| 0|        4|      10000|          2|        0|        42|      42|        1.00|     0.01|    0.01|               0.01|      0.44
+       8|SUCCESS| 1|   0|        4| 0|        4|      10000|          2|        0|        42|      42|        1.00|     0.01|    0.01|               0.01|      0.44
+      12|SUCCESS| 1|   0|        4| 0|        4|      10000|          2|        0|        42|      42|        1.00|     0.01|    0.01|               0.01|      0.44
+      16|SUCCESS| 1|   0|        4| 0|        4|      10000|          2|        0|        42|      42|        1.00|     0.01|    0.01|               0.01|      0.44
+      20|SUCCESS| 1|   0|        4| 0|        4|      10000|          2|        0|        42|      42|        1.00|     0.01|    0.01|               0.01|      0.44
+      24|SUCCESS| 1|   0|        4| 0|        4|      10000|          2|        0|        42|      42|        1.00|     0.01|    0.01|               0.01|      0.44
+      28|SUCCESS| 1|   0|        4| 0|        4|      10000|          2|        0|        42|      42|        1.00|     0.01|    0.01|               0.01|      0.44
+      32|SUCCESS| 1|   0|        4| 0|        4|      10000|          2|        0|        42|      42|        1.00|     0.01|    0.01|               0.01|      0.44
+      36|SUCCESS| 1|   0|        4| 0|        4|      10000|          2|        0|        42|      42|        1.00|     0.01|    0.01|               0.01|      0.44
+      40|SUCCESS| 1|   0|        4| 0|        4|      10000|          2|        0|        42|      42|        1.00|     0.01|    0.01|               0.01|      0.44
+      44|SUCCESS| 1|   0|        4| 0|        4|      10000|          2|        0|        42|      42|        1.00|     0.01|    0.01|               0.01|      0.44
+      48|SUCCESS| 1|   0|        4| 0|        4|      10000|          2|        0|        42|      42|        1.00|     0.01|    0.01|               0.01|      0.44
+      52|SUCCESS| 1|   0|        4| 0|        4|      10000|          2|        0|        42|      42|        1.00|     0.01|    0.01|               0.01|      0.44
+      56|SUCCESS| 1|   0|        4| 0|        4|      10000|          2|        0|        42|      42|        1.00|     0.01|    0.01|               0.01|      0.44
+      60|SUCCESS| 1|   0|        4| 0|        4|      10000|          2|        0|        42|      42|        1.00|     0.01|    0.01|               0.01|      0.44
+      64|SUCCESS| 1|   0|        4| 0|        4|      10000|          2|        0|        42|      42|        1.00|     0.01|    0.01|               0.01|      0.44
+      68|SUCCESS| 1|   0|        4| 0|        4|      10000|          2|        0|        42|      42|        1.00|     0.01|    0.01|               0.01|      0.44
+      72|SUCCESS| 1|   0|        4| 0|        4|      10000|          2|        0|        42|      42|        1.00|     0.01|    0.01|               0.01|      0.44
+      76|SUCCESS| 1|   0|        4| 0|        4|      10000|          2|        0|        42|      42|        1.00|     0.01|    0.01|               0.01|      0.44
+      80|SUCCESS| 1|   0|        4| 0|        4|      10000|          2|        0|        42|      42|        1.00|     0.01|    0.01|               0.01|      0.44
+      84|SUCCESS| 1|   0|        4| 0|        4|      10000|          2|        0|        42|      42|        1.00|     0.01|    0.01|               0.01|      0.44
+      88|SUCCESS| 1|   0|        4| 0|        4|      10000|          2|        0|        42|      42|        1.00|     0.01|    0.01|               0.01|      0.44
+      92|SUCCESS| 1|   0|        4| 0|        4|      10000|          2|        0|        42|      42|        1.00|     0.01|    0.01|               0.01|      0.44
+      96|SUCCESS| 1|   0|        4| 0|        4|      10000|          2|        0|        42|      42|        1.00|     0.01|    0.01|               0.01|      0.44
+       1|SUCCESS| 1|   1|        4| 1|        4|      10000|          2|        0|        42|      42|        1.00|     0.01|    0.01|               0.01|      0.44
+       5|SUCCESS| 1|   1|        4| 1|        4|      10000|          2|        0|        42|      42|        1.00|     0.01|    0.01|               0.01|      0.44
+       9|SUCCESS| 1|   1|        4| 1|        4|      10000|          2|        0|        42|      42|        1.00|     0.01|    0.01|               0.01|      0.44
+      13|SUCCESS| 1|   1|        4| 1|        4|      10000|          2|        0|        42|      42|        1.00|     0.01|    0.01|               0.01|      0.44
+      17|SUCCESS| 1|   1|        4| 1|        4|      10000|          2|        0|        42|      42|        1.00|     0.01|    0.01|               0.01|      0.44
+      21|SUCCESS| 1|   1|        4| 1|        4|      10000|          2|        0|        42|      42|        1.00|     0.01|    0.01|               0.01|      0.44
+      25|SUCCESS| 1|   1|        4| 1|        4|      10000|          2|        0|        42|      42|        1.00|     0.01|    0.01|               0.01|      0.44
+      29|SUCCESS| 1|   1|        4| 1|        4|      10000|          2|        0|        42|      42|        1.00|     0.01|    0.01|               0.01|      0.44
+      33|SUCCESS| 1|   1|        4| 1|        4|      10000|          2|        0|        42|      42|        1.00|     0.01|    0.01|               0.01|      0.44
+      37|SUCCESS| 1|   1|        4| 1|        4|      10000|          2|        0|        42|      42|        1.00|     0.01|    0.01|               0.01|      0.44
+      41|SUCCESS| 1|   1|        4| 1|        4|      10000|          2|        0|        42|      42|        1.00|     0.01|    0.01|               0.01|      0.44
+      45|SUCCESS| 1|   1|        4| 1|        4|      10000|          2|        0|        42|      42|        1.00|     0.01|    0.01|               0.01|      0.44
+      49|SUCCESS| 1|   1|        4| 1|        4|      10000|          2|        0|        42|      42|        1.00|     0.01|    0.01|               0.01|      0.44
+      53|SUCCESS| 1|   1|        4| 1|        4|      10000|          2|        0|        42|      42|        1.00|     0.01|    0.01|               0.01|      0.44
+      57|SUCCESS| 1|   1|        4| 1|        4|      10000|          2|        0|        42|      42|        1.00|     0.01|    0.01|               0.01|      0.44
+      61|SUCCESS| 1|   1|        4| 1|        4|      10000|          2|        0|        42|      42|        1.00|     0.01|    0.01|               0.01|      0.44
+      65|SUCCESS| 1|   1|        4| 1|        4|      10000|          2|        0|        42|      42|        1.00|     0.01|    0.01|               0.01|      0.44
+      69|SUCCESS| 1|   1|        4| 1|        4|      10000|          2|        0|        42|      42|        1.00|     0.01|    0.01|               0.01|      0.44
+      73|SUCCESS| 1|   1|        4| 1|        4|      10000|          2|        0|        42|      42|        1.00|     0.01|    0.01|               0.01|      0.44
+      77|SUCCESS| 1|   1|        4| 1|        4|      10000|          2|        0|        42|      42|        1.00|     0.01|    0.01|               0.01|      0.44
+      81|SUCCESS| 1|   1|        4| 1|        4|      10000|          2|        0|        42|      42|        1.00|     0.01|    0.01|               0.01|      0.44
+      85|SUCCESS| 1|   1|        4| 1|        4|      10000|          2|        0|        42|      42|        1.00|     0.01|    0.01|               0.01|      0.44
+      89|SUCCESS| 1|   1|        4| 1|        4|      10000|          2|        0|        42|      42|        1.00|     0.01|    0.01|               0.01|      0.44
+      93|SUCCESS| 1|   1|        4| 1|        4|      10000|          2|        0|        42|      42|        1.00|     0.01|    0.01|               0.01|      0.44
+      97|SUCCESS| 1|   1|        4| 1|        4|      10000|          2|        0|        42|      42|        1.00|     0.01|    0.01|               0.01|      0.44
+       2|SUCCESS| 1|   1|        4| 2|        4|      10000|          2|        0|        42|      42|        1.00|     0.01|    0.01|               0.01|      0.44
+       6|SUCCESS| 1|   1|        4| 2|        4|      10000|          2|        0|        42|      42|        1.00|     0.01|    0.01|               0.01|      0.44
+      10|SUCCESS| 1|   1|        4| 2|        4|      10000|          2|        0|        42|      42|        1.00|     0.01|    0.01|               0.01|      0.44
+      14|SUCCESS| 1|   1|        4| 2|        4|      10000|          2|        0|        42|      42|        1.00|     0.01|    0.01|               0.01|      0.44
+      18|SUCCESS| 1|   1|        4| 2|        4|      10000|          2|        0|        42|      42|        1.00|     0.01|    0.01|               0.01|      0.44
+      22|SUCCESS| 1|   1|        4| 2|        4|      10000|          2|        0|        42|      42|        1.00|     0.01|    0.01|               0.01|      0.44
+      26|SUCCESS| 1|   1|        4| 2|        4|      10000|          2|        0|        42|      42|        1.00|     0.01|    0.01|               0.01|      0.44
+      30|SUCCESS| 1|   1|        4| 2|        4|      10000|          2|        0|        42|      42|        1.00|     0.01|    0.01|               0.01|      0.44
+      34|SUCCESS| 1|   1|        4| 2|        4|      10000|          2|        0|        42|      42|        1.00|     0.01|    0.01|               0.01|      0.44
+      38|SUCCESS| 1|   1|        4| 2|        4|      10000|          2|        0|        42|      42|        1.00|     0.01|    0.01|               0.01|      0.44
+      42|SUCCESS| 1|   1|        4| 2|        4|      10000|          2|        0|        42|      42|        1.00|     0.01|    0.01|               0.01|      0.44
+      46|SUCCESS| 1|   1|        4| 2|        4|      10000|          2|        0|        42|      42|        1.00|     0.01|    0.01|               0.01|      0.44
+      50|SUCCESS| 1|   1|        4| 2|        4|      10000|          2|        0|        42|      42|        1.00|     0.01|    0.01|               0.01|      0.44
+      54|SUCCESS| 1|   1|        4| 2|        4|      10000|          2|        0|        42|      42|        1.00|     0.01|    0.01|               0.01|      0.44
+      58|SUCCESS| 1|   1|        4| 2|        4|      10000|          2|        0|        42|      42|        1.00|     0.01|    0.01|               0.01|      0.44
+      62|SUCCESS| 1|   1|        4| 2|        4|      10000|          2|        0|        42|      42|        1.00|     0.01|    0.01|               0.01|      0.44
+      66|SUCCESS| 1|   1|        4| 2|        4|      10000|          2|        0|        42|      42|        1.00|     0.01|    0.01|               0.01|      0.44
+      70|SUCCESS| 1|   1|        4| 2|        4|      10000|          2|        0|        42|      42|        1.00|     0.01|    0.01|               0.01|      0.44
+      74|SUCCESS| 1|   1|        4| 2|        4|      10000|          2|        0|        42|      42|        1.00|     0.01|    0.01|               0.01|      0.44
+      78|SUCCESS| 1|   1|        4| 2|        4|      10000|          2|        0|        42|      42|        1.00|     0.01|    0.01|               0.01|      0.44
+      82|SUCCESS| 1|   1|        4| 2|        4|      10000|          2|        0|        42|      42|        1.00|     0.01|    0.01|               0.01|      0.44
+      86|SUCCESS| 1|   1|        4| 2|        4|      10000|          2|        0|        42|      42|        1.00|     0.01|    0.01|               0.01|      0.44
+      90|SUCCESS| 1|   1|        4| 2|        4|      10000|          2|        0|        42|      42|        1.00|     0.01|    0.01|               0.01|      0.44
+      94|SUCCESS| 1|   1|        4| 2|        4|      10000|          2|        0|        42|      42|        1.00|     0.01|    0.01|               0.01|      0.44
+      98|SUCCESS| 1|   1|        4| 2|        4|      10000|          2|        0|        42|      42|        1.00|     0.01|    0.01|               0.01|      0.44
+       3|SUCCESS| 1|   1|        4| 3|        4|      10000|          2|        0|        42|      42|        1.00|     0.01|    0.01|               0.01|      0.44
+       7|SUCCESS| 1|   1|        4| 3|        4|      10000|          2|        0|        42|      42|        1.00|     0.01|    0.01|               0.01|      0.44
+      11|SUCCESS| 1|   1|        4| 3|        4|      10000|          2|        0|        42|      42|        1.00|     0.01|    0.01|               0.01|      0.44
+      15|SUCCESS| 1|   1|        4| 3|        4|      10000|          2|        0|        42|      42|        1.00|     0.01|    0.01|               0.01|      0.44
+      19|SUCCESS| 1|   1|        4| 3|        4|      10000|          2|        0|        42|      42|        1.00|     0.01|    0.01|               0.01|      0.44
+      23|SUCCESS| 1|   1|        4| 3|        4|      10000|          2|        0|        42|      42|        1.00|     0.01|    0.01|               0.01|      0.44
+      27|SUCCESS| 1|   1|        4| 3|        4|      10000|          2|        0|        42|      42|        1.00|     0.01|    0.01|               0.01|      0.44
+      31|SUCCESS| 1|   1|        4| 3|        4|      10000|          2|        0|        42|      42|        1.00|     0.01|    0.01|               0.01|      0.44
+      35|SUCCESS| 1|   1|        4| 3|        4|      10000|          2|        0|        42|      42|        1.00|     0.01|    0.01|               0.01|      0.44
+      39|SUCCESS| 1|   1|        4| 3|        4|      10000|          2|        0|        42|      42|        1.00|     0.01|    0.01|               0.01|      0.44
+      43|SUCCESS| 1|   1|        4| 3|        4|      10000|          2|        0|        42|      42|        1.00|     0.01|    0.01|               0.01|      0.44
+      47|SUCCESS| 1|   1|        4| 3|        4|      10000|          2|        0|        42|      42|        1.00|     0.01|    0.01|               0.01|      0.44
+      51|SUCCESS| 1|   1|        4| 3|        4|      10000|          2|        0|        42|      42|        1.00|     0.01|    0.01|               0.01|      0.44
+      55|SUCCESS| 1|   1|        4| 3|        4|      10000|          2|        0|        42|      42|        1.00|     0.01|    0.01|               0.01|      0.44
+      59|SUCCESS| 1|   1|        4| 3|        4|      10000|          2|        0|        42|      42|        1.00|     0.01|    0.01|               0.01|      0.44
+      63|SUCCESS| 1|   1|        4| 3|        4|      10000|          2|        0|        42|      42|        1.00|     0.01|    0.01|               0.01|      0.44
+      67|SUCCESS| 1|   1|        4| 3|        4|      10000|          2|        0|        42|      42|        1.00|     0.01|    0.01|               0.01|      0.44
+      71|SUCCESS| 1|   1|        4| 3|        4|      10000|          2|        0|        42|      42|        1.00|     0.01|    0.01|               0.01|      0.44
+      75|SUCCESS| 1|   1|        4| 3|        4|      10000|          2|        0|        42|      42|        1.00|     0.01|    0.01|               0.01|      0.44
+      79|SUCCESS| 1|   1|        4| 3|        4|      10000|          2|        0|        42|      42|        1.00|     0.01|    0.01|               0.01|      0.44
+      83|SUCCESS| 1|   1|        4| 3|        4|      10000|          2|        0|        42|      42|        1.00|     0.01|    0.01|               0.01|      0.44
+      87|SUCCESS| 1|   1|        4| 3|        4|      10000|          2|        0|        42|      42|        1.00|     0.01|    0.01|               0.01|      0.44
+      91|SUCCESS| 1|   1|        4| 3|        4|      10000|          2|        0|        42|      42|        1.00|     0.01|    0.01|               0.01|      0.44
+      95|SUCCESS| 1|   1|        4| 3|        4|      10000|          2|        0|        42|      42|        1.00|     0.01|    0.01|               0.01|      0.44
+      99|SUCCESS| 1|   1|        4| 3|        4|      10000|          2|        0|        42|      42|        1.00|     0.01|    0.01|               0.01|      0.44
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------
+[success] Total time: 2 s, completed Sep 27, 2020, 7:59:18 PM
+```
 
-## Baseline
-Your absolute minimum gradeable baseline project can be based on the examples that come from the repo CloudSim Plus. To be considered for grading, your project should include at least one of your simulation programs written in functional Java, your project should be buildable using the SBT, and your documentation must specify how you create and evaluate your simulated clouds based on the cloud models that we learn in the class/textbooks. Your documentation must include the results of your simulation, the measurement of the runtime parameters of the simulator (e.g., CPU and RAM utilization) and your explanations of how these results help you with your simulation objectives (e.g., choose the right cloud model and configuration). Simply copying Java programs from examples and modifying them a bit (e.g., rename some variables) will result in desk-rejecting your submission.
+#### Best Fit VM allocation policy. Network Datacenter.
 
-## Piazza collaboration
-You can post questions and replies, statements, comments, discussion, etc. on Piazza. For this homework, feel free to share your ideas, mistakes, code fragments, commands from scripts, and some of your technical solutions with the rest of the class, and you can ask and advise others using Piazza on where resources and sample programs can be found on the internet, how to resolve dependencies and configuration issues. When posting question and answers on Piazza, please select the appropriate folder, i.e., hw1 to ensure that all discussion threads can be easily located. Active participants and problem solvers will receive bonuses from the big brother :-) who is watching your exchanges on Piazza (i.e., your class instructor and your TA). However, *you must not describe your simulation or specific details related how your construct your models!*
+```
+                                                                         SIMULATION RESULTS
 
-## Git logistics
-**This is an individual homework.** Separate repositories will be created for each of your homeworks and for the course project. You will find a corresponding [entry for this homework](https://bitbucket.org/cs441-fall2020/cs441_fall2020_hw1/src/master/). You will fork this repository and your fork will be private, no one else besides you, the TA and your course instructor will have access to your fork. Please remember to grant a read access to your repository to your TA and your instructor. In future, for the team homeworks and the course project, you should grant the write access to your forkmates, but NOT for this homework. You can commit and push your code as many times as you want. Your code will not be visible and it should not be visible to other students (except for your forkmates for a team project, but not for this homework). When you push the code into the remote repo, your instructor and the TAs will see your code in your separate private fork. Making your fork public or inviting other students to join your fork for an individual homework will result in losing your grade. For grading, only the latest push timed before the deadline will be considered. **If you push after the deadline, your grade for the homework will be zero**. For more information about using the Git and Bitbucket specifically, please use this [link as the starting point](https://confluence.atlassian.com/bitbucket/bitbucket-cloud-documentation-home-221448814.html). For those of you who struggle with the Git, I recommend a book by Ryan Hodson on Ry's Git Tutorial. The other book called Pro Git is written by Scott Chacon and Ben Straub and published by Apress and it is [freely available](https://git-scm.com/book/en/v2/). There are multiple videos on youtube that go into details of the Git organization and use.
+Cloudlet|Status |DC|Host|Host PEs |VM|VM PEs   |CloudletLen|CloudletPEs|StartTime|FinishTime|ExecTime|Ram Utilized|Cost / Bw|Cost / s|Accumulated Bw Cost|Total Cost
+      ID|       |ID|  ID|CPU cores|ID|CPU cores|         MI|  CPU cores|  Seconds|   Seconds| Seconds|           %|        $|       $|                  $|         $
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------
+       0|SUCCESS| 1|   0|        4| 0|        4|      10000|          2|        0|        42|      42|        1.00|     0.01|    0.01|               0.01|      0.44
+       4|SUCCESS| 1|   0|        4| 0|        4|      10000|          2|        0|        42|      42|        1.00|     0.01|    0.01|               0.01|      0.44
+       8|SUCCESS| 1|   0|        4| 0|        4|      10000|          2|        0|        42|      42|        1.00|     0.01|    0.01|               0.01|      0.44
+      12|SUCCESS| 1|   0|        4| 0|        4|      10000|          2|        0|        42|      42|        1.00|     0.01|    0.01|               0.01|      0.44
+      16|SUCCESS| 1|   0|        4| 0|        4|      10000|          2|        0|        42|      42|        1.00|     0.01|    0.01|               0.01|      0.44
+      20|SUCCESS| 1|   0|        4| 0|        4|      10000|          2|        0|        42|      42|        1.00|     0.01|    0.01|               0.01|      0.44
+      24|SUCCESS| 1|   0|        4| 0|        4|      10000|          2|        0|        42|      42|        1.00|     0.01|    0.01|               0.01|      0.44
+      28|SUCCESS| 1|   0|        4| 0|        4|      10000|          2|        0|        42|      42|        1.00|     0.01|    0.01|               0.01|      0.44
+      32|SUCCESS| 1|   0|        4| 0|        4|      10000|          2|        0|        42|      42|        1.00|     0.01|    0.01|               0.01|      0.44
+      36|SUCCESS| 1|   0|        4| 0|        4|      10000|          2|        0|        42|      42|        1.00|     0.01|    0.01|               0.01|      0.44
+      40|SUCCESS| 1|   0|        4| 0|        4|      10000|          2|        0|        42|      42|        1.00|     0.01|    0.01|               0.01|      0.44
+      44|SUCCESS| 1|   0|        4| 0|        4|      10000|          2|        0|        42|      42|        1.00|     0.01|    0.01|               0.01|      0.44
+      48|SUCCESS| 1|   0|        4| 0|        4|      10000|          2|        0|        42|      42|        1.00|     0.01|    0.01|               0.01|      0.44
+      52|SUCCESS| 1|   0|        4| 0|        4|      10000|          2|        0|        42|      42|        1.00|     0.01|    0.01|               0.01|      0.44
+      56|SUCCESS| 1|   0|        4| 0|        4|      10000|          2|        0|        42|      42|        1.00|     0.01|    0.01|               0.01|      0.44
+      60|SUCCESS| 1|   0|        4| 0|        4|      10000|          2|        0|        42|      42|        1.00|     0.01|    0.01|               0.01|      0.44
+      64|SUCCESS| 1|   0|        4| 0|        4|      10000|          2|        0|        42|      42|        1.00|     0.01|    0.01|               0.01|      0.44
+      68|SUCCESS| 1|   0|        4| 0|        4|      10000|          2|        0|        42|      42|        1.00|     0.01|    0.01|               0.01|      0.44
+      72|SUCCESS| 1|   0|        4| 0|        4|      10000|          2|        0|        42|      42|        1.00|     0.01|    0.01|               0.01|      0.44
+      76|SUCCESS| 1|   0|        4| 0|        4|      10000|          2|        0|        42|      42|        1.00|     0.01|    0.01|               0.01|      0.44
+      80|SUCCESS| 1|   0|        4| 0|        4|      10000|          2|        0|        42|      42|        1.00|     0.01|    0.01|               0.01|      0.44
+      84|SUCCESS| 1|   0|        4| 0|        4|      10000|          2|        0|        42|      42|        1.00|     0.01|    0.01|               0.01|      0.44
+      88|SUCCESS| 1|   0|        4| 0|        4|      10000|          2|        0|        42|      42|        1.00|     0.01|    0.01|               0.01|      0.44
+      92|SUCCESS| 1|   0|        4| 0|        4|      10000|          2|        0|        42|      42|        1.00|     0.01|    0.01|               0.01|      0.44
+      96|SUCCESS| 1|   0|        4| 0|        4|      10000|          2|        0|        42|      42|        1.00|     0.01|    0.01|               0.01|      0.44
+       1|SUCCESS| 1|   1|        4| 1|        4|      10000|          2|        0|        42|      42|        1.00|     0.01|    0.01|               0.01|      0.44
+       5|SUCCESS| 1|   1|        4| 1|        4|      10000|          2|        0|        42|      42|        1.00|     0.01|    0.01|               0.01|      0.44
+       9|SUCCESS| 1|   1|        4| 1|        4|      10000|          2|        0|        42|      42|        1.00|     0.01|    0.01|               0.01|      0.44
+      13|SUCCESS| 1|   1|        4| 1|        4|      10000|          2|        0|        42|      42|        1.00|     0.01|    0.01|               0.01|      0.44
+      17|SUCCESS| 1|   1|        4| 1|        4|      10000|          2|        0|        42|      42|        1.00|     0.01|    0.01|               0.01|      0.44
+      21|SUCCESS| 1|   1|        4| 1|        4|      10000|          2|        0|        42|      42|        1.00|     0.01|    0.01|               0.01|      0.44
+      25|SUCCESS| 1|   1|        4| 1|        4|      10000|          2|        0|        42|      42|        1.00|     0.01|    0.01|               0.01|      0.44
+      29|SUCCESS| 1|   1|        4| 1|        4|      10000|          2|        0|        42|      42|        1.00|     0.01|    0.01|               0.01|      0.44
+      33|SUCCESS| 1|   1|        4| 1|        4|      10000|          2|        0|        42|      42|        1.00|     0.01|    0.01|               0.01|      0.44
+      37|SUCCESS| 1|   1|        4| 1|        4|      10000|          2|        0|        42|      42|        1.00|     0.01|    0.01|               0.01|      0.44
+      41|SUCCESS| 1|   1|        4| 1|        4|      10000|          2|        0|        42|      42|        1.00|     0.01|    0.01|               0.01|      0.44
+      45|SUCCESS| 1|   1|        4| 1|        4|      10000|          2|        0|        42|      42|        1.00|     0.01|    0.01|               0.01|      0.44
+      49|SUCCESS| 1|   1|        4| 1|        4|      10000|          2|        0|        42|      42|        1.00|     0.01|    0.01|               0.01|      0.44
+      53|SUCCESS| 1|   1|        4| 1|        4|      10000|          2|        0|        42|      42|        1.00|     0.01|    0.01|               0.01|      0.44
+      57|SUCCESS| 1|   1|        4| 1|        4|      10000|          2|        0|        42|      42|        1.00|     0.01|    0.01|               0.01|      0.44
+      61|SUCCESS| 1|   1|        4| 1|        4|      10000|          2|        0|        42|      42|        1.00|     0.01|    0.01|               0.01|      0.44
+      65|SUCCESS| 1|   1|        4| 1|        4|      10000|          2|        0|        42|      42|        1.00|     0.01|    0.01|               0.01|      0.44
+      69|SUCCESS| 1|   1|        4| 1|        4|      10000|          2|        0|        42|      42|        1.00|     0.01|    0.01|               0.01|      0.44
+      73|SUCCESS| 1|   1|        4| 1|        4|      10000|          2|        0|        42|      42|        1.00|     0.01|    0.01|               0.01|      0.44
+      77|SUCCESS| 1|   1|        4| 1|        4|      10000|          2|        0|        42|      42|        1.00|     0.01|    0.01|               0.01|      0.44
+      81|SUCCESS| 1|   1|        4| 1|        4|      10000|          2|        0|        42|      42|        1.00|     0.01|    0.01|               0.01|      0.44
+      85|SUCCESS| 1|   1|        4| 1|        4|      10000|          2|        0|        42|      42|        1.00|     0.01|    0.01|               0.01|      0.44
+      89|SUCCESS| 1|   1|        4| 1|        4|      10000|          2|        0|        42|      42|        1.00|     0.01|    0.01|               0.01|      0.44
+      93|SUCCESS| 1|   1|        4| 1|        4|      10000|          2|        0|        42|      42|        1.00|     0.01|    0.01|               0.01|      0.44
+      97|SUCCESS| 1|   1|        4| 1|        4|      10000|          2|        0|        42|      42|        1.00|     0.01|    0.01|               0.01|      0.44
+       2|SUCCESS| 1|   1|        4| 2|        4|      10000|          2|        0|        42|      42|        1.00|     0.01|    0.01|               0.01|      0.44
+       6|SUCCESS| 1|   1|        4| 2|        4|      10000|          2|        0|        42|      42|        1.00|     0.01|    0.01|               0.01|      0.44
+      10|SUCCESS| 1|   1|        4| 2|        4|      10000|          2|        0|        42|      42|        1.00|     0.01|    0.01|               0.01|      0.44
+      14|SUCCESS| 1|   1|        4| 2|        4|      10000|          2|        0|        42|      42|        1.00|     0.01|    0.01|               0.01|      0.44
+      18|SUCCESS| 1|   1|        4| 2|        4|      10000|          2|        0|        42|      42|        1.00|     0.01|    0.01|               0.01|      0.44
+      22|SUCCESS| 1|   1|        4| 2|        4|      10000|          2|        0|        42|      42|        1.00|     0.01|    0.01|               0.01|      0.44
+      26|SUCCESS| 1|   1|        4| 2|        4|      10000|          2|        0|        42|      42|        1.00|     0.01|    0.01|               0.01|      0.44
+      30|SUCCESS| 1|   1|        4| 2|        4|      10000|          2|        0|        42|      42|        1.00|     0.01|    0.01|               0.01|      0.44
+      34|SUCCESS| 1|   1|        4| 2|        4|      10000|          2|        0|        42|      42|        1.00|     0.01|    0.01|               0.01|      0.44
+      38|SUCCESS| 1|   1|        4| 2|        4|      10000|          2|        0|        42|      42|        1.00|     0.01|    0.01|               0.01|      0.44
+      42|SUCCESS| 1|   1|        4| 2|        4|      10000|          2|        0|        42|      42|        1.00|     0.01|    0.01|               0.01|      0.44
+      46|SUCCESS| 1|   1|        4| 2|        4|      10000|          2|        0|        42|      42|        1.00|     0.01|    0.01|               0.01|      0.44
+      50|SUCCESS| 1|   1|        4| 2|        4|      10000|          2|        0|        42|      42|        1.00|     0.01|    0.01|               0.01|      0.44
+      54|SUCCESS| 1|   1|        4| 2|        4|      10000|          2|        0|        42|      42|        1.00|     0.01|    0.01|               0.01|      0.44
+      58|SUCCESS| 1|   1|        4| 2|        4|      10000|          2|        0|        42|      42|        1.00|     0.01|    0.01|               0.01|      0.44
+      62|SUCCESS| 1|   1|        4| 2|        4|      10000|          2|        0|        42|      42|        1.00|     0.01|    0.01|               0.01|      0.44
+      66|SUCCESS| 1|   1|        4| 2|        4|      10000|          2|        0|        42|      42|        1.00|     0.01|    0.01|               0.01|      0.44
+      70|SUCCESS| 1|   1|        4| 2|        4|      10000|          2|        0|        42|      42|        1.00|     0.01|    0.01|               0.01|      0.44
+      74|SUCCESS| 1|   1|        4| 2|        4|      10000|          2|        0|        42|      42|        1.00|     0.01|    0.01|               0.01|      0.44
+      78|SUCCESS| 1|   1|        4| 2|        4|      10000|          2|        0|        42|      42|        1.00|     0.01|    0.01|               0.01|      0.44
+      82|SUCCESS| 1|   1|        4| 2|        4|      10000|          2|        0|        42|      42|        1.00|     0.01|    0.01|               0.01|      0.44
+      86|SUCCESS| 1|   1|        4| 2|        4|      10000|          2|        0|        42|      42|        1.00|     0.01|    0.01|               0.01|      0.44
+      90|SUCCESS| 1|   1|        4| 2|        4|      10000|          2|        0|        42|      42|        1.00|     0.01|    0.01|               0.01|      0.44
+      94|SUCCESS| 1|   1|        4| 2|        4|      10000|          2|        0|        42|      42|        1.00|     0.01|    0.01|               0.01|      0.44
+      98|SUCCESS| 1|   1|        4| 2|        4|      10000|          2|        0|        42|      42|        1.00|     0.01|    0.01|               0.01|      0.44
+       3|SUCCESS| 1|   1|        4| 3|        4|      10000|          2|        0|        42|      42|        1.00|     0.01|    0.01|               0.01|      0.44
+       7|SUCCESS| 1|   1|        4| 3|        4|      10000|          2|        0|        42|      42|        1.00|     0.01|    0.01|               0.01|      0.44
+      11|SUCCESS| 1|   1|        4| 3|        4|      10000|          2|        0|        42|      42|        1.00|     0.01|    0.01|               0.01|      0.44
+      15|SUCCESS| 1|   1|        4| 3|        4|      10000|          2|        0|        42|      42|        1.00|     0.01|    0.01|               0.01|      0.44
+      19|SUCCESS| 1|   1|        4| 3|        4|      10000|          2|        0|        42|      42|        1.00|     0.01|    0.01|               0.01|      0.44
+      23|SUCCESS| 1|   1|        4| 3|        4|      10000|          2|        0|        42|      42|        1.00|     0.01|    0.01|               0.01|      0.44
+      27|SUCCESS| 1|   1|        4| 3|        4|      10000|          2|        0|        42|      42|        1.00|     0.01|    0.01|               0.01|      0.44
+      31|SUCCESS| 1|   1|        4| 3|        4|      10000|          2|        0|        42|      42|        1.00|     0.01|    0.01|               0.01|      0.44
+      35|SUCCESS| 1|   1|        4| 3|        4|      10000|          2|        0|        42|      42|        1.00|     0.01|    0.01|               0.01|      0.44
+      39|SUCCESS| 1|   1|        4| 3|        4|      10000|          2|        0|        42|      42|        1.00|     0.01|    0.01|               0.01|      0.44
+      43|SUCCESS| 1|   1|        4| 3|        4|      10000|          2|        0|        42|      42|        1.00|     0.01|    0.01|               0.01|      0.44
+      47|SUCCESS| 1|   1|        4| 3|        4|      10000|          2|        0|        42|      42|        1.00|     0.01|    0.01|               0.01|      0.44
+      51|SUCCESS| 1|   1|        4| 3|        4|      10000|          2|        0|        42|      42|        1.00|     0.01|    0.01|               0.01|      0.44
+      55|SUCCESS| 1|   1|        4| 3|        4|      10000|          2|        0|        42|      42|        1.00|     0.01|    0.01|               0.01|      0.44
+      59|SUCCESS| 1|   1|        4| 3|        4|      10000|          2|        0|        42|      42|        1.00|     0.01|    0.01|               0.01|      0.44
+      63|SUCCESS| 1|   1|        4| 3|        4|      10000|          2|        0|        42|      42|        1.00|     0.01|    0.01|               0.01|      0.44
+      67|SUCCESS| 1|   1|        4| 3|        4|      10000|          2|        0|        42|      42|        1.00|     0.01|    0.01|               0.01|      0.44
+      71|SUCCESS| 1|   1|        4| 3|        4|      10000|          2|        0|        42|      42|        1.00|     0.01|    0.01|               0.01|      0.44
+      75|SUCCESS| 1|   1|        4| 3|        4|      10000|          2|        0|        42|      42|        1.00|     0.01|    0.01|               0.01|      0.44
+      79|SUCCESS| 1|   1|        4| 3|        4|      10000|          2|        0|        42|      42|        1.00|     0.01|    0.01|               0.01|      0.44
+      83|SUCCESS| 1|   1|        4| 3|        4|      10000|          2|        0|        42|      42|        1.00|     0.01|    0.01|               0.01|      0.44
+      87|SUCCESS| 1|   1|        4| 3|        4|      10000|          2|        0|        42|      42|        1.00|     0.01|    0.01|               0.01|      0.44
+      91|SUCCESS| 1|   1|        4| 3|        4|      10000|          2|        0|        42|      42|        1.00|     0.01|    0.01|               0.01|      0.44
+      95|SUCCESS| 1|   1|        4| 3|        4|      10000|          2|        0|        42|      42|        1.00|     0.01|    0.01|               0.01|      0.44
+      99|SUCCESS| 1|   1|        4| 3|        4|      10000|          2|        0|        42|      42|        1.00|     0.01|    0.01|               0.01|      0.44
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------
+[success] Total time: 2 s, completed Sep 27, 2020, 8:00:39 PM
+```
 
-Please follow this naming convention while submitting your work : "Firstname_Lastname_hw1" without quotes, where you specify your first and last names **exactly as you are registered with the University system**, so that we can easily recognize your submission. I repeat, make sure that you will give both your TA and the course instructor the read/write access to your *private forked repository* so that we can leave the file feedback.txt with the explanation of the grade assigned to your homework.
+##### 3 DataCenters 
 
-## Discussions and submission
-As it is mentioned above, you can post questions and replies, statements, comments, discussion, etc. on Piazza. Remember that you cannot share your code and your solutions privately, but you can ask and advise others using Piazza and StackOverflow or some other developer networks where resources and sample programs can be found on the Internet, how to resolve dependencies and configuration issues. Yet, your implementation should be your own and you cannot share it. Alternatively, you cannot copy and paste someone else's implementation and put your name on it. Your submissions will be checked for plagiarism. **Copying code from your classmates or from some sites on the Internet will result in severe academic penalties up to the termination of your enrollment in the University**. When posting question and answers on Piazza, please select the appropriate folder, i.e., hw1 to ensure that all discussion threads can be easily located.
+```
+                                                                        SIMULATION RESULTS
+
+Cloudlet|Status |DC|Host|Host PEs |VM|VM PEs   |CloudletLen|CloudletPEs|StartTime|FinishTime|ExecTime|Ram Utilized|Cost / Bw|Cost / s|Accumulated Bw Cost|Total Cost
+      ID|       |ID|  ID|CPU cores|ID|CPU cores|         MI|  CPU cores|  Seconds|   Seconds| Seconds|           %|        $|       $|                  $|         $
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------
+     111|SUCCESS| 1|   2|        8| 0|        2|      28731|          2|        0|        40|      40|        1.00|     0.01|    0.01|              20.48|     31.12
+     112|SUCCESS| 1|   3|        8| 1|        2|      66925|          2|        0|        76|      76|        1.00|     0.01|    0.01|              20.48|     31.48
+     113|SUCCESS| 1|   4|        8| 2|        2|      17596|          2|        0|        30|      29|        1.00|     0.01|    0.01|              20.48|     31.02
+     114|SUCCESS| 1|   5|        8| 3|        2|      42434|          2|        0|        64|      64|        1.00|     0.01|    0.01|              20.48|     31.36
+     115|SUCCESS| 1|   2|        8| 4|        2|       7485|          2|        0|        11|      11|        1.00|     0.01|    0.01|              20.48|     30.83
+     116|SUCCESS| 1|   3|        8| 5|        1|      79149|          2|        0|       170|     170|        1.00|     0.01|    0.01|              20.48|     32.42
+     117|SUCCESS| 1|   4|        8| 6|        1|      81186|          2|        0|       176|     176|        1.00|     0.01|    0.01|              20.48|     32.48
+     118|SUCCESS| 1|   5|        8| 7|        1|      78543|          2|        0|       195|     195|        1.00|     0.01|    0.01|              20.48|     32.67
+     119|SUCCESS| 1|   3|        8| 8|        1|      43377|          2|        0|        92|      92|        1.00|     0.01|    0.01|              20.48|     31.64
+     120|SUCCESS| 1|   4|        8| 9|        1|      83088|          2|        0|       134|     134|        1.00|     0.01|    0.01|              20.48|     32.06
+     101|SUCCESS| 1|   5|        8|10|        1|      24167|          2|        0|        60|      60|        1.00|     0.01|    0.01|               5.12|     10.84
+     102|SUCCESS| 1|   0|        4|11|        1|      23362|          2|        0|        58|      58|        1.00|     0.01|    0.01|               5.12|     10.82
+     103|SUCCESS| 1|   1|        4|12|        1|      11769|          2|        0|        32|      31|        1.00|     0.01|    0.01|               5.12|     10.56
+     104|SUCCESS| 1|   2|        8|13|        1|      77240|          2|        0|       128|     128|        1.00|     0.01|    0.01|               5.12|     11.52
+     105|SUCCESS| 2|   0|        4|14|        1|      68542|          2|        0|       109|     109|        1.00|     0.01|    0.01|               5.12|     11.33
+     106|SUCCESS| 2|   1|        4|15|        1|      84720|          2|        0|       165|     165|        1.00|     0.01|    0.01|               5.12|     11.89
+     107|SUCCESS| 1|   2|        8| 0|        2|       4066|          2|        0|         7|       7|        1.00|     0.01|    0.01|               5.12|     10.31
+     108|SUCCESS| 1|   3|        8| 1|        2|      42680|          2|        0|        60|      60|        1.00|     0.01|    0.01|               5.12|     10.84
+     109|SUCCESS| 1|   4|        8| 2|        2|      71247|          2|        0|        91|      91|        1.00|     0.01|    0.01|               5.12|     11.15
+     110|SUCCESS| 1|   5|        8| 3|        2|      56776|          2|        0|        80|      80|        1.00|     0.01|    0.01|               5.12|     11.04
+       1|SUCCESS| 1|   2|        8| 4|        2|      88697|          1|        0|        77|      77|        1.00|     0.01|    0.01|               1.28|      4.61
+       2|SUCCESS| 1|   3|        8| 5|        1|      48766|          1|        0|       128|     128|        1.00|     0.01|    0.01|               1.28|      5.12
+       3|SUCCESS| 1|   4|        8| 6|        1|      18710|          1|        0|        57|      56|        1.00|     0.01|    0.01|               1.28|      4.41
+       4|SUCCESS| 1|   5|        8| 7|        1|      99472|          1|        0|       217|     217|        1.00|     0.01|    0.01|               1.28|      6.01
+       5|SUCCESS| 1|   3|        8| 8|        1|      20951|          1|        0|        52|      52|        1.00|     0.01|    0.01|               1.28|      4.36
+       6|SUCCESS| 1|   4|        8| 9|        1|      29077|          1|        0|        62|      62|        1.00|     0.01|    0.01|               1.28|      4.46
+       7|SUCCESS| 1|   5|        8|10|        1|      29912|          1|        0|        68|      68|        1.00|     0.01|    0.01|               1.28|      4.52
+       8|SUCCESS| 1|   0|        4|11|        1|      60857|          1|        0|       114|     113|        1.00|     0.01|    0.01|               1.28|      4.98
+       9|SUCCESS| 1|   1|        4|12|        1|      64245|          1|        0|       111|     111|        1.00|     0.01|    0.01|               1.28|      4.95
+      10|SUCCESS| 1|   2|        8|13|        1|       5659|          1|        0|        15|      15|        1.00|     0.01|    0.01|               1.28|      3.99
+      11|SUCCESS| 2|   0|        4|14|        1|      38575|          1|        0|        77|      76|        1.00|     0.01|    0.01|               1.28|      4.61
+      12|SUCCESS| 2|   1|        4|15|        1|      63043|          1|        0|       143|     143|        1.00|     0.01|    0.01|               1.28|      5.27
+      13|SUCCESS| 1|   2|        8| 0|        2|      63467|          1|        0|        64|      63|        1.00|     0.01|    0.01|               1.28|      4.48
+      14|SUCCESS| 1|   3|        8| 1|        2|      84545|          1|        0|        82|      82|        1.00|     0.01|    0.01|               1.28|      4.66
+      15|SUCCESS| 1|   4|        8| 2|        2|      77319|          1|        0|        94|      93|        1.00|     0.01|    0.01|               1.28|      4.78
+      16|SUCCESS| 1|   5|        8| 3|        2|      93544|          1|        0|        97|      97|        1.00|     0.01|    0.01|               1.28|      4.81
+      17|SUCCESS| 1|   2|        8| 4|        2|      97888|          1|        0|        80|      80|        1.00|     0.01|    0.01|               1.28|      4.64
+      18|SUCCESS| 1|   3|        8| 5|        1|      61147|          1|        0|       152|     152|        1.00|     0.01|    0.01|               1.28|      5.36
+      19|SUCCESS| 1|   4|        8| 6|        1|      73404|          1|        0|       169|     169|        1.00|     0.01|    0.01|               1.28|      5.53
+      20|SUCCESS| 1|   5|        8| 7|        1|      13395|          1|        0|        41|      40|        1.00|     0.01|    0.01|               1.28|      4.25
+      21|SUCCESS| 1|   3|        8| 8|        1|      54407|          1|        0|       103|     103|        1.00|     0.01|    0.01|               1.28|      4.87
+      22|SUCCESS| 1|   4|        8| 9|        1|      87617|          1|        0|       137|     137|        1.00|     0.01|    0.01|               1.28|      5.21
+      23|SUCCESS| 1|   5|        8|10|        1|      65539|          1|        0|       101|     101|        1.00|     0.01|    0.01|               1.28|      4.85
+      24|SUCCESS| 1|   0|        4|11|        1|      38977|          1|        0|        84|      84|        1.00|     0.01|    0.01|               1.28|      4.68
+      25|SUCCESS| 1|   1|        4|12|        1|      15856|          1|        0|        40|      40|        1.00|     0.01|    0.01|               1.28|      4.24
+      26|SUCCESS| 1|   2|        8|13|        1|      69583|          1|        0|       123|     123|        1.00|     0.01|    0.01|               1.28|      5.07
+      27|SUCCESS| 2|   0|        4|14|        1|      66517|          1|        0|       108|     107|        1.00|     0.01|    0.01|               1.28|      4.92
+      28|SUCCESS| 2|   1|        4|15|        1|      54521|          1|        0|       130|     130|        1.00|     0.01|    0.01|               1.28|      5.14
+      29|SUCCESS| 1|   2|        8| 0|        2|      81941|          1|        0|        70|      70|        1.00|     0.01|    0.01|               1.28|      4.54
+      30|SUCCESS| 1|   3|        8| 1|        2|      58133|          1|        0|        72|      72|        1.00|     0.01|    0.01|               1.28|      4.56
+      31|SUCCESS| 1|   4|        8| 2|        2|      62015|          1|        0|        83|      83|        1.00|     0.01|    0.01|               1.28|      4.67
+      32|SUCCESS| 1|   5|        8| 3|        2|      74962|          1|        0|        91|      90|        1.00|     0.01|    0.01|               1.28|      4.75
+      33|SUCCESS| 1|   2|        8| 4|        2|      73465|          1|        0|        71|      71|        1.00|     0.01|    0.01|               1.28|      4.55
+      34|SUCCESS| 1|   3|        8| 5|        1|      70982|          1|        0|       165|     165|        1.00|     0.01|    0.01|               1.28|      5.49
+      35|SUCCESS| 1|   4|        8| 6|        1|      69772|          1|        0|       164|     164|        1.00|     0.01|    0.01|               1.28|      5.48
+      36|SUCCESS| 1|   5|        8| 7|        1|      83026|          1|        0|       203|     202|        1.00|     0.01|    0.01|               1.28|      5.87
+      37|SUCCESS| 1|   3|        8| 8|        1|      90456|          1|        0|       127|     127|        1.00|     0.01|    0.01|               1.28|      5.11
+      38|SUCCESS| 1|   4|        8| 9|        1|       2289|          1|        0|         6|       6|        1.00|     0.01|    0.01|               1.28|      3.90
+      39|SUCCESS| 1|   5|        8|10|        1|      57234|          1|        0|        95|      95|        1.00|     0.01|    0.01|               1.28|      4.79
+      40|SUCCESS| 1|   0|        4|11|        1|      72002|          1|        0|       125|     125|        1.00|     0.01|    0.01|               1.28|      5.09
+      41|SUCCESS| 1|   1|        4|12|        1|      53751|          1|        0|       100|     100|        1.00|     0.01|    0.01|               1.28|      4.84
+      42|SUCCESS| 1|   2|        8|13|        1|      40946|          1|        0|        85|      85|        1.00|     0.01|    0.01|               1.28|      4.69
+      43|SUCCESS| 2|   0|        4|14|        1|      26026|          1|        0|        56|      56|        1.00|     0.01|    0.01|               1.28|      4.40
+      44|SUCCESS| 2|   1|        4|15|        1|      57828|          1|        0|       136|     136|        1.00|     0.01|    0.01|               1.28|      5.20
+      45|SUCCESS| 1|   2|        8| 0|        2|      45716|          1|        0|        54|      54|        1.00|     0.01|    0.01|               1.28|      4.38
+      46|SUCCESS| 1|   3|        8| 1|        2|      52026|          1|        0|        68|      68|        1.00|     0.01|    0.01|               1.28|      4.52
+      47|SUCCESS| 1|   4|        8| 2|        2|      58412|          1|        0|        80|      79|        1.00|     0.01|    0.01|               1.28|      4.64
+      48|SUCCESS| 1|   5|        8| 3|        2|      80183|          1|        0|        92|      92|        1.00|     0.01|    0.01|               1.28|      4.76
+      49|SUCCESS| 1|   2|        8| 4|        2|      81205|          1|        0|        75|      75|        1.00|     0.01|    0.01|               1.28|      4.59
+      50|SUCCESS| 1|   3|        8| 5|        1|      58232|          1|        0|       147|     147|        1.00|     0.01|    0.01|               1.28|      5.31
+      51|SUCCESS| 1|   4|        8| 6|        1|      40849|          1|        0|       109|     109|        1.00|     0.01|    0.01|               1.28|      4.93
+      52|SUCCESS| 1|   5|        8| 7|        1|      89315|          1|        0|       211|     211|        1.00|     0.01|    0.01|               1.28|      5.95
+      53|SUCCESS| 1|   3|        8| 8|        1|      28035|          1|        0|        66|      66|        1.00|     0.01|    0.01|               1.28|      4.50
+      54|SUCCESS| 1|   4|        8| 9|        1|      87990|          1|        0|       137|     137|        1.00|     0.01|    0.01|               1.28|      5.21
+      55|SUCCESS| 1|   5|        8|10|        1|      18435|          1|        0|        49|      49|        1.00|     0.01|    0.01|               1.28|      4.33
+      56|SUCCESS| 1|   0|        4|11|        1|      97466|          1|        0|       140|     139|        1.00|     0.01|    0.01|               1.28|      5.24
+      57|SUCCESS| 1|   1|        4|12|        1|      44232|          1|        0|        87|      87|        1.00|     0.01|    0.01|               1.28|      4.71
+      58|SUCCESS| 1|   2|        8|13|        1|      68091|          1|        0|       122|     122|        1.00|     0.01|    0.01|               1.28|      5.06
+      59|SUCCESS| 2|   0|        4|14|        1|       1793|          1|        0|         5|       5|        1.00|     0.01|    0.01|               1.28|      3.89
+      60|SUCCESS| 2|   1|        4|15|        1|       9316|          1|        0|        25|      25|        1.00|     0.01|    0.01|               1.28|      4.09
+      61|SUCCESS| 1|   2|        8| 0|        2|      61392|          1|        0|        63|      63|        1.00|     0.01|    0.01|               1.28|      4.47
+      62|SUCCESS| 1|   3|        8| 1|        2|      28050|          1|        0|        43|      43|        1.00|     0.01|    0.01|               1.28|      4.27
+      63|SUCCESS| 1|   4|        8| 2|        2|      31231|          1|        0|        48|      48|        1.00|     0.01|    0.01|               1.28|      4.32
+      64|SUCCESS| 1|   5|        8| 3|        2|      51298|          1|        0|        75|      75|        1.00|     0.01|    0.01|               1.28|      4.59
+      65|SUCCESS| 1|   2|        8| 4|        2|      57514|          1|        0|        60|      60|        1.00|     0.01|    0.01|               1.28|      4.44
+      66|SUCCESS| 1|   3|        8| 5|        1|      70628|          1|        0|       164|     164|        1.00|     0.01|    0.01|               1.28|      5.48
+      67|SUCCESS| 1|   4|        8| 6|        1|      21119|          1|        0|        63|      63|        1.00|     0.01|    0.01|               1.28|      4.47
+      68|SUCCESS| 1|   5|        8| 7|        1|      94438|          1|        0|       215|     215|        1.00|     0.01|    0.01|               1.28|      5.99
+      69|SUCCESS| 1|   3|        8| 8|        1|       8314|          1|        0|        22|      22|        1.00|     0.01|    0.01|               1.28|      4.06
+      70|SUCCESS| 1|   4|        8| 9|        1|      11081|          1|        0|        27|      27|        1.00|     0.01|    0.01|               1.28|      4.11
+      71|SUCCESS| 1|   5|        8|10|        1|      85988|          1|        0|       108|     108|        1.00|     0.01|    0.01|               1.28|      4.92
+      72|SUCCESS| 1|   0|        4|11|        1|      10250|          1|        0|        28|      27|        1.00|     0.01|    0.01|               1.28|      4.12
+      73|SUCCESS| 1|   1|        4|12|        1|      67179|          1|        0|       113|     113|        1.00|     0.01|    0.01|               1.28|      4.97
+      74|SUCCESS| 1|   2|        8|13|        1|      24057|          1|        0|        57|      57|        1.00|     0.01|    0.01|               1.28|      4.41
+      75|SUCCESS| 2|   0|        4|14|        1|      47267|          1|        0|        88|      88|        1.00|     0.01|    0.01|               1.28|      4.72
+      76|SUCCESS| 2|   1|        4|15|        1|      55740|          1|        0|       133|     133|        1.00|     0.01|    0.01|               1.28|      5.17
+      77|SUCCESS| 1|   2|        8| 0|        2|      51987|          1|        0|        58|      58|        1.00|     0.01|    0.01|               1.28|      4.42
+      78|SUCCESS| 1|   3|        8| 1|        2|      16415|          1|        0|        27|      27|        1.00|     0.01|    0.01|               1.28|      4.11
+      79|SUCCESS| 1|   4|        8| 2|        2|      75602|          1|        0|        93|      93|        1.00|     0.01|    0.01|               1.28|      4.77
+      80|SUCCESS| 1|   5|        8| 3|        2|      64087|          1|        0|        85|      85|        1.00|     0.01|    0.01|               1.28|      4.69
+      81|SUCCESS| 1|   2|        8| 4|        2|      17539|          1|        0|        23|      23|        1.00|     0.01|    0.01|               1.28|      4.07
+      82|SUCCESS| 1|   3|        8| 5|        1|      24778|          1|        0|        72|      72|        1.00|     0.01|    0.01|               1.28|      4.56
+      83|SUCCESS| 1|   4|        8| 6|        1|      78144|          1|        0|       174|     173|        1.00|     0.01|    0.01|               1.28|      5.58
+      84|SUCCESS| 1|   5|        8| 7|        1|      91767|          1|        0|       214|     213|        1.00|     0.01|    0.01|               1.28|      5.98
+      85|SUCCESS| 1|   3|        8| 8|        1|      89399|          1|        0|       126|     126|        1.00|     0.01|    0.01|               1.28|      5.10
+      86|SUCCESS| 1|   4|        8| 9|        1|      25779|          1|        0|        56|      56|        1.00|     0.01|    0.01|               1.28|      4.40
+      87|SUCCESS| 1|   5|        8|10|        1|      16661|          1|        0|        45|      44|        1.00|     0.01|    0.01|               1.28|      4.29
+      88|SUCCESS| 1|   0|        4|11|        1|      90603|          1|        0|       137|     137|        1.00|     0.01|    0.01|               1.28|      5.21
+      89|SUCCESS| 1|   1|        4|12|        1|      76525|          1|        0|       116|     116|        1.00|     0.01|    0.01|               1.28|      5.00
+      90|SUCCESS| 1|   2|        8|13|        1|      20109|          1|        0|        49|      49|        1.00|     0.01|    0.01|               1.28|      4.33
+      91|SUCCESS| 2|   0|        4|14|        1|       9010|          1|        0|        22|      21|        1.00|     0.01|    0.01|               1.28|      4.06
+      92|SUCCESS| 2|   1|        4|15|        1|      97798|          1|        0|       170|     169|        1.00|     0.01|    0.01|               1.28|      5.54
+      93|SUCCESS| 1|   2|        8| 0|        2|      28485|          1|        0|        39|      39|        1.00|     0.01|    0.01|               1.28|      4.23
+      94|SUCCESS| 1|   3|        8| 1|        2|      15087|          1|        0|        25|      25|        1.00|     0.01|    0.01|               1.28|      4.09
+      95|SUCCESS| 1|   4|        8| 2|        2|      86242|          1|        0|        97|      96|        1.00|     0.01|    0.01|               1.28|      4.81
+      96|SUCCESS| 1|   5|        8| 3|        2|       3222|          1|        0|         5|       5|        1.00|     0.01|    0.01|               1.28|      3.89
+      97|SUCCESS| 1|   2|        8| 4|        2|      40623|          1|        0|        46|      46|        1.00|     0.01|    0.01|               1.28|      4.30
+      98|SUCCESS| 1|   3|        8| 5|        1|      15484|          1|        0|        47|      47|        1.00|     0.01|    0.01|               1.28|      4.31
+      99|SUCCESS| 1|   4|        8| 6|        1|      59739|          1|        0|       147|     147|        1.00|     0.01|    0.01|               1.28|      5.31
+     100|SUCCESS| 1|   5|        8| 7|        1|      19988|          1|        0|        58|      58|        1.00|     0.01|    0.01|               1.28|      4.42
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------
+[success] Total time: 3 s, completed Sep 27, 2020, 8:01:15 PM
+```
+
+#### Observations and understanding
+1. The change in allocation policies did not make a noticeable difference. But when the type of datacenters was changed, there was a significant change in the monetary cost. This was maybe due to the introduction of latencies when the network switches were added after simulation 2. 
+1. For the 3 datacenters, when a single broker was made to manage, it almose always never created the 3rd datacenter. This might arise to losses in real world scenarios as one datacenter is being underutilized. This must be because, the cloudlets were not bound to particular Vms in particular Host machines
 
 
-## Submission deadline and logistics
-Friday, September 18 at 10PM CST via the bitbucket repository. Your submission will include the code for the simulator program, your documentation with instructions and detailed explanations on how to assemble and deploy your cloud simulation along with the results of your simulation and a document that explains these results based on the characteristics and the parameters of your simulations, and what the limitations of your implementation are. Again, do not forget, please make sure that you will give both your TAs and your instructor the read access to your private forked repository. Your name should be shown in your README.md file and other documents. Your code should compile and run from the command line using the commands **sbt clean compile test** and **sbt clean compile run** or the corresponding commands for Gradle. Also, you project should be IntelliJ friendly, i.e., your graders should be able to import your code into IntelliJ and run from there. Use .gitignore to exlude files that should not be pushed into the repo.
-
-
-## Evaluation criteria
-- the maximum grade for this homework is 10% with the bonus up to 5% for fully pure functional implementation in Scala using monadic combinators. Points are subtracted from this maximum grade: for example, saying that 2% is lost if some requirement is not completed means that the resulting grade will be 10%-2% => 8%; if the core homework functionality does not work, no bonus points will be given;
-- only some basic cloud simulation examples from the cloudsim repo are given and nothing else is done: up to 10% lost;
-- having less than five unit and/or integration tests: up to 5% lost;
-- missing comments and explanations from the simulation program: up to 5% lost;
-- logging is not used in the simulation programs: up to 3% lost;
-- hardcoding the input values in the source code instead of using the suggested configuration libraries: up to 4% lost;
-- no instructions in README.md on how to install and run your simulator: up to 5% lost;
-- the program crashes without completing the core functionality: up to 3% lost;
-- the documentation exists but it is insufficient to understand how you assembled and deployed all components of the cloud: up to 5% lost;
-- the minimum grade for this homework cannot be less than zero.
-
-That's it, folks!
+#### Future Improvements
+- Nearest host implementation and add delays to arriving cloudlets
+- Map cloudlets to particular VMs 
+- Create multiple broker simulation to try route vms to respective datacentes and utilize all the datacenters
