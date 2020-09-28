@@ -15,10 +15,10 @@ Name: Prajwal Kishor Kammardi
 + Clone the project 
 + On the console  
 
-```shell script
+```
 sbt clean compile test
 ``` 
-```shell script
+```
 sbt clean compile run
 ```
 **Note**: There are 4 main classes in the project. These contain 4 different simulations. This will be shown when you run the `clean compile *` commands
