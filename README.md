@@ -14,8 +14,9 @@ Name: Prajwal Kishor Kammardi
 ##### Running the application
 + Clone the project 
 + On the console  
+
 ```shell script
- sbt clean compile test
+sbt clean compile test
 ``` 
 ```shell script
 sbt clean compile run
