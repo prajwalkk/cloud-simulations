@@ -1,0 +1,8 @@
+Hi Prajwal,
+
+Your grade for HW1 is 12.5%.
+
+1. -0.5%: Results specific to service provisioning models could have been discussed.
+2. +3%: For building your simulations using functional Scala constructs.
+
+Abhijeet
